@@ -108,18 +108,6 @@ select { cursor: pointer; }
   align-content: start;
 }
 
-.red-circle {
-  position: absolute;
-  width: 520px;
-  height: 520px;
-  border-radius: 50%;
-  background: var(--red);
-  top: -80px;
-  right: -120px;
-  z-index: 0;
-  pointer-events: none;
-}
-
 .hero-section-tag {
   display: flex;
   align-items: baseline;
