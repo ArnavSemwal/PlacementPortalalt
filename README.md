@@ -78,6 +78,14 @@ python neo4j_demo.py
 python interactive_demo.py
 ```
 
+### 3. Running the Swiss-Style Web Application (Frontend)
+Launch the local web server to explore the International Typographic Style placement portal:
+```bash
+cd frontend
+npx -y serve . -p 3000
+```
+Open `http://localhost:3000` in your web browser.
+
 ---
 
 ## Repository File Structure
@@ -86,6 +94,16 @@ python interactive_demo.py
 PlacementPortalalt/
 ├── .gitignore                          # Standard Python & OS ignore rules
 ├── README.md                           # Master documentation and setup guide
+│
+├── frontend/                           # Swiss Typographic (International) Design System UI
+│   ├── index.html                      # Portal Homepage (Hero 140px headline, asymmetric red circle)
+│   ├── dashboard.html                  # Role-aware dashboard (Funnel, real-time KPIs, timelines)
+│   ├── drives.html                     # Active drives with department filters & job application modals
+│   ├── students.html                   # Searchable student database & skill verification
+│   ├── analytics.html                  # CTC distribution charts, department breakdowns & skill heatmap
+│   ├── style.css                       # Pure CSS Swiss 12-column hairline grid & typographic rules
+│   ├── app.js                          # State management & dynamic interaction logic
+│   └── data.js                         # Mock relational & graph entity data store
 │
 ├── [DA3 GRAPH DATABASE ARTIFACTS]
 ├── neo4j_demo.py                       # Interactive CLI Graph Explorer (Dual-Engine: Live Neo4j + Embedded)
