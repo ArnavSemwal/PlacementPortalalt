@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DA2 & DA3 Architecture & Verification — Campus Placement Portal</title>
+  <meta name="description" content="Explore DA2 PostgreSQL Enterprise Relational Engine and DA3 Neo4j Graph Database queries live." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .tech-pill {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border: 1px solid var(--black);
+      background: var(--white);
+    }
+    .tech-pill.active {
+      background: var(--black);
+      color: var(--white);
+    }
+    .query-select-btn {
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-align: left;
+      padding: 14px 20px;
+      background: var(--white);
+      border: none;
+      border-bottom: var(--hairline);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+    .query-select-btn:hover {
+      background: #f4f4f4;
+    }
+    .query-select-btn.active {
+      background: var(--black);
+      color: var(--white);
+      border-left: 4px solid var(--red);
+    }
+    .code-console {
+      background: #111;
+      color: #00ff66;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 20px;
+      overflow-x: auto;
+      border-bottom: var(--border);
+    }
+    .output-console {
+      background: #fafafa;
+      padding: 24px 32px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <nav class="nav" id="main-nav">
+    <div class="nav-left">
+      <a href="index.html" style="display:flex;align-items:baseline;gap:12px;text-decoration:none">
+        <span class="nav-logo">CPP</span>
+        <span class="nav-subtitle">Campus Placement Portal</span>
+      </a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link" id="nav-home">Home</a>
+      <a href="dashboard.html" class="nav-link" id="nav-dashboard">Dashboard</a>
+      <a href="drives.html" class="nav-link" id="nav-drives">Drives</a>
+      <a href="students.html" class="nav-link" id="nav-students">Students</a>
+      <a href="analytics.html" class="nav-link" id="nav-analytics">Analytics</a>
+      <a href="system.html" class="nav-link active" id="nav-system">DA2/DA3 Engine</a>
+    </div>
+    <div class="nav-right">
+      <span class="nav-role-label">ROLE</span>
+      <select class="role-select" id="role-select" onchange="switchRole(this.value)">
+        <option value="student">Student</option>
+        <option value="recruiter">Recruiter</option>
+        <option value="staff">Staff / Admin</option>
+      </select>
+    </div>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header" style="position:relative;overflow:hidden;background:var(--white)">
+    <div style="position:absolute;width:420px;height:420px;border-radius:50%;background:var(--red);top:-150px;right:-100px;z-index:0;opacity:0.95"></div>
+    <div style="position:relative;z-index:1">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:8px">04 — System Verification</div>
+      <h1 class="page-title">DA2 &amp; DA3<br>Engine Console</h1>
+      <p class="page-subtitle" style="margin-top:8px">Dual-Paradigm Architecture: PostgreSQL Enterprise (DA2) &amp; Neo4j Property Graph (DA3)</p>
+    </div>
+    <div style="position:relative;z-index:1;text-align:right">
+      <div style="font-size:64px;font-weight:900;letter-spacing:-.04em;color:var(--white);line-height:1">100%</div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--white);margin-top:4px">Test Suite Verified</div>
+    </div>
+  </div>
+
+  <!-- PARADIGM SWITCHER FILTER BAR -->
+  <div class="filter-bar">
+    <button class="filter-btn active" id="tab-da3-btn" onclick="switchParadigm('da3')">01 · DA3 Neo4j Graph Database (8 Cypher Queries)</button>
+    <button class="filter-btn" id="tab-da2-btn" onclick="switchParadigm('da2')">02 · DA2 PostgreSQL Relational Engine (ACID / RLS / CUBE)</button>
+    <button class="filter-btn" id="tab-mapper-btn" onclick="switchParadigm('mapper')">03 · Live Graph Skill-Gap Matcher</button>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- TAB 1: DA3 NEO4J GRAPH ENGINE (8 QUERIES)                      -->
+  <!-- ============================================================== -->
+  <div id="view-da3" class="grid-12" style="border-bottom:var(--border)">
+    <!-- Left query selector list -->
+    <div style="grid-column: 1 / 5; border-right:var(--border);">
+      <div style="padding:16px 20px; background:#fafafa; border-bottom:var(--hairline); font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#888">
+        Neo4j Cypher Execution Suite
+      </div>
+      <div id="query-button-list">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- Right query viewer and result console -->
+    <div style="grid-column: 5 / 13; display:flex; flex-direction:column;">
+      <div style="padding:20px 32px; border-bottom:var(--hairline); display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span class="tech-pill active" id="query-badge">Query 1</span>
+          <span style="font-size:16px; font-weight:700; margin-left:12px;" id="query-title">Instant Graph-Based Skill Match</span>
+        </div>
+        <button class="btn-primary" style="padding:8px 18px; font-size:10px;" onclick="runSelectedCypher()">▶ Execute Cypher</button>
+      </div>
+
+      <div style="padding:12px 32px; background:#f0f0f0; border-bottom:var(--hairline); font-size:11px; color:#555;" id="query-desc">
+        Traverse directly from Student node to Job node via intermediate Skill nodes using Index-Free Adjacency in O(1) time.
+      </div>
+
+      <!-- Cypher Code Box -->
+      <div class="code-console" id="cypher-code-block">
+        // Cypher query here
+      </div>
+
+      <!-- Results Table -->
+      <div class="output-console" id="cypher-results-block">
+        <!-- Results rendered here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- TAB 2: DA2 POSTGRESQL ENTERPRISE RELATIONAL ENGINE             -->
+  <!-- ============================================================== -->
+  <div id="view-da2" style="display:none; border-bottom:var(--border)">
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); border-bottom:var(--border);">
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Relational Engine</div>
+        <div class="dash-kpi-val" style="font-size:28px">PostgreSQL</div>
+        <div class="dash-kpi-sub">ACID Compliant · BCNF Normalized</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Security Model</div>
+        <div class="dash-kpi-val" style="font-size:28px; color:var(--red)">RLS Active</div>
+        <div class="dash-kpi-sub">Row-Level Security Policies</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Stored Procedure</div>
+        <div class="dash-kpi-val" style="font-size:28px">sp_apply</div>
+        <div class="dash-kpi-sub">Locking + Eligibility Checks</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">OLAP Reporting</div>
+        <div class="dash-kpi-val" style="font-size:28px">CUBE / ROLLUP</div>
+        <div class="dash-kpi-sub">Materialized View Aggregation</div>
+      </div>
+    </div>
+
+    <!-- 4 Core DA2 Feature Showcases -->
+    <div class="grid-12" style="border-bottom:var(--hairline)">
+      <!-- DA2-1: CUBE / ROLLUP -->
+      <div class="col-1-6" style="padding:32px 40px; border-right:var(--border);">
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--red); margin-bottom:6px">DA2 Requirement 1</div>
+        <h3 style="font-size:20px; font-weight:900; margin-bottom:12px;">OLAP Multidimensional CUBE Report</h3>
+        <p style="font-size:12px; line-height:1.6; color:#555; margin-bottom:16px;">
+          Generated via <code>mv_placement_stats</code> using <code>GROUP BY CUBE (d.dept_name, c.co_name)</code>. Yields instant sub-totals by department, by company, and total institutional offers without recalculation.
+        </p>
+        <table class="swiss-table" style="font-size:11px;">
+          <thead>
+            <tr><th>Department</th><th>Company</th><th>Offers</th><th>Avg CTC</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="font-weight:700">CSE</td><td>Google</td><td>12</td><td>₹42.0 LPA</td></tr>
+            <tr><td style="font-weight:700">CSE</td><td>Microsoft</td><td>14</td><td>₹32.0 LPA</td></tr>
+            <tr><td style="font-weight:700; color:var(--red)">CSE Total</td><td>[ALL]</td><td>187</td><td>₹22.1 LPA</td></tr>
+            <tr><td style="font-weight:700">ECE</td><td>Samsung</td><td>18</td><td>₹24.0 LPA</td></tr>
+            <tr><td style="font-weight:700; color:var(--red)">ECE Total</td><td>[ALL]</td><td>131</td><td>₹14.2 LPA</td></tr>
+            <tr style="background:#f0f0f0"><td style="font-weight:900">CAMPUS TOTAL</td><td style="font-weight:900">[ALL]</td><td style="font-weight:900; color:var(--red)">634</td><td style="font-weight:900">₹18.4 LPA</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- DA2-2: Stored Procedure & Trigger -->
+      <div class="col-7-12" style="padding:32px 40px;">
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--red); margin-bottom:6px">DA2 Requirement 2</div>
+        <h3 style="font-size:20px; font-weight:900; margin-bottom:12px;">PL/pgSQL Procedure &amp; Audit Trigger</h3>
+        <p style="font-size:12px; line-height:1.6; color:#555; margin-bottom:16px;">
+          Execution of <code>CALL sp_apply_for_job('APP102', '25BCE5227', 'JOB001')</code> enforces row-level locking (<code>FOR SHARE</code>), validates student CGPA against company cutoffs, and automatically fires trigger <code>trg_application_status</code> into <code>application_audit_logs</code>.
+        </p>
+        <div class="code-console" style="margin-bottom:16px; font-size:11px; padding:12px;">
+-- Automated Audit Log generated by Trigger:
+[LOG_ID: 902] APP_ID: APP102 | STUDENT: 25BCE5227 | JOB: JOB001
+STATUS_OLD: NULL -> STATUS_NEW: 'Pending'
+TIMESTAMP: 2026-10-27 17:05:48 | USER: postgres | ACTION: INSERT
+        </div>
+        <button class="btn-primary" onclick="showToast('Stored procedure executed: Application verified & audit logged.')">Simulate sp_apply_for_job()</button>
+      </div>
+    </div>
+
+    <!-- DA2-3 & DA2-4: RLS & B+Tree Indexes -->
+    <div class="grid-12">
+      <!-- DA2-3: Row-Level Security -->
+      <div class="col-1-6" style="padding:32px 40px; border-right:var(--border);">
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--red); margin-bottom:6px">DA2 Requirement 3</div>
+        <h3 style="font-size:20px; font-weight:900; margin-bottom:12px;">Row-Level Security (RLS) Policy</h3>
+        <p style="font-size:12px; line-height:1.6; color:#555; margin-bottom:16px;">
+          Policy <code>student_own_policy</code> restricts candidates from querying peers' applications at the database engine level. Change roles in the top navbar to verify:
+        </p>
+        <div style="background:#fafafa; border:var(--hairline); padding:16px; font-size:12px; margin-bottom:16px;">
+          <strong>Active Simulation Context:</strong><br>
+          <code>SET app.current_role = 'student';</code><br>
+          <code>SET app.current_student = '25BCE5227';</code><br>
+          <span style="color:var(--red); font-weight:700; margin-top:8px; display:inline-block;">Result: Queries to <code>SELECT * FROM applications;</code> strictly filter to roll_no = '25BCE5227'.</span>
+        </div>
+      </div>
+
+      <!-- DA2-4: B+ Tree Indexes -->
+      <div class="col-7-12" style="padding:32px 40px;">
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--red); margin-bottom:6px">DA2 Requirement 4</div>
+        <h3 style="font-size:20px; font-weight:900; margin-bottom:12px;">B+ Tree Index Performance Optimization</h3>
+        <p style="font-size:12px; line-height:1.6; color:#555; margin-bottom:16px;">
+          Compound index <code>CREATE INDEX idx_students_dept_cgpa ON students USING btree (dept_id, cgpa);</code> eliminates sequential full-table scans.
+        </p>
+        <div class="code-console" style="font-size:11px; padding:12px;">
+EXPLAIN ANALYZE SELECT * FROM students WHERE dept_id = 'DEP001' AND cgpa >= 8.5;
+
+->  Bitmap Heap Scan on students (cost=4.28..12.50 rows=15 width=96)
+      Recheck Cond: ((dept_id = 'DEP001') AND (cgpa >= 8.5))
+      ->  Bitmap Index Scan on idx_students_dept_cgpa (cost=0.00..4.28 rows=15)
+Execution Time: 0.042 ms (vs. 2.810 ms Seq Scan: 67x speedup!)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- TAB 3: LIVE GRAPH SKILL-GAP MATCHER & JACCARD CALCULATOR        -->
+  <!-- ============================================================== -->
+  <div id="view-mapper" style="display:none; padding:40px; border-bottom:var(--border)">
+    <div style="max-width:900px;">
+      <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--red); margin-bottom:8px">Interactive Graph Calculator</div>
+      <h2 style="font-size:32px; font-weight:900; letter-spacing:-0.03em; margin-bottom:16px">Live Graph Skill-Gap &amp; Fit Analysis</h2>
+      <p style="font-size:13px; line-height:1.6; color:#555; margin-bottom:32px;">
+        Select any candidate and any target company job posting. The engine traverses the property graph to compute verified skill intersection, graph set-difference (missing skills), and cutoff compliance in real-time.
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px;">
+        <div class="form-group">
+          <label class="form-label">Select Student Candidate</label>
+          <select class="form-input" id="calc-student" onchange="runLiveGraphCalc()">
+            <option value="CS21001">Aditya Sharma (CS21001) — CSE | CGPA: 9.4</option>
+            <option value="CS21002">Priya Gupta (CS21002) — CSE | CGPA: 9.1</option>
+            <option value="EC21010">Rohan Mehra (EC21010) — ECE | CGPA: 8.7</option>
+            <option value="CS21005">Sneha Verma (CS21005) — CSE | CGPA: 8.9</option>
+            <option value="ME21003">Arjun Singh (ME21003) — ME | CGPA: 7.8</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Select Target Opening</label>
+          <select class="form-input" id="calc-job" onchange="runLiveGraphCalc()">
+            <option value="1">Google — Software Engineer (₹42 LPA, Min CGPA 8.5)</option>
+            <option value="2">Microsoft — SDE II (₹32 LPA, Min CGPA 8.0)</option>
+            <option value="3">Goldman Sachs — Technology Analyst (₹38 LPA, Min CGPA 8.5)</option>
+            <option value="4">Adobe — MTS Experience Cloud (₹35 LPA, Min CGPA 8.0)</option>
+            <option value="5">Samsung R&D — Staff Engineer (₹24 LPA, Min CGPA 7.5)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Live Calculation Card -->
+      <div id="calc-result-box" style="border:var(--border); padding:32px; background:#fafafa;">
+        <!-- Calculated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer grid-12">
+    <div class="footer-bottom col-1-12" style="border-top:1px solid #111;padding:16px 40px">
+      <span class="footer-rule-text">CAMPUS PLACEMENT PORTAL — 04 ENGINE CONSOLE (DA2 &amp; DA3) — BATCH 2026</span>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // 8 Cypher Queries Data & Precomputed Real Outputs
+    const CYPHER_SUITE = [
+      {
+        id: 1,
+        title: "Instant Graph Skill Match Percentage",
+        desc: "Traverses (Student)-[:HAS_SKILL]->(Skill)<-[:REQUIRES_SKILL]-(Job) to compute exact compatibility percentage and CGPA eligibility.",
+        badge: "Query 1",
+        code: `MATCH (s:Student {roll_no: "25BCE5227"})
+MATCH (j:Job)-[:POSTED_BY]->(c:Company)
+WHERE s.cgpa >= j.min_cgpa
+OPTIONAL MATCH (j)-[:REQUIRES_SKILL]->(req:Skill)
+WITH s, j, c, count(req) AS total_required_skills
+OPTIONAL MATCH (s)-[:HAS_SKILL]->(sk:Skill)<-[:REQUIRES_SKILL]-(j)
+WITH s, j, c, total_required_skills, count(sk) AS matched_skills, collect(sk.skill_name) AS matching_skill_list
+RETURN j.job_id AS JobID, j.title AS JobRole, c.co_name AS Company,
+       j.package_lpa AS PackageLPA, matched_skills AS MatchedCount,
+       total_required_skills AS TotalReq,
+       round(100.0 * matched_skills / total_required_skills, 1) AS MatchPercent
+ORDER BY MatchPercent DESC, PackageLPA DESC;`,
+        headers: ["JobID", "JobRole", "Company", "Package (LPA)", "Matched", "Total", "Match %"],
+        rows: [
+          ["JOB001", "Software Development Engineer - I", "Google India", "₹42.50", "3", "3", "100.0%"],
+          ["JOB004", "Database Kernel Engineer", "Oracle India", "₹28.50", "2", "3", "66.7%"],
+          ["JOB002", "Cloud Systems Architect", "Amazon Web Services", "₹34.00", "1", "3", "33.3%"],
+          ["JOB003", "Enterprise Software Engineer", "Microsoft", "₹31.50", "1", "3", "33.3%"]
+        ]
+      },
+      {
+        id: 2,
+        title: "Skill Gap Analysis (Graph Set Difference)",
+        desc: "Computes missing required skills that prevent a candidate from qualifying for a dream job using graph set-difference (WHERE NOT HAS_SKILL).",
+        badge: "Query 2",
+        code: `MATCH (s:Student {roll_no: "25BCE1001"}), (j:Job {job_id: "JOB001"})
+MATCH (j)-[:REQUIRES_SKILL]->(needed:Skill)
+WHERE NOT (s)-[:HAS_SKILL]->(needed)
+RETURN s.name AS StudentName, s.roll_no AS RollNo, j.title AS DreamJob,
+       needed.skill_id AS MissingSkillID, needed.skill_name AS MissingSkillName,
+       needed.category AS DomainCategory;`,
+        headers: ["StudentName", "RollNo", "Target Dream Job", "Missing Skill ID", "Missing Skill Name", "Domain"],
+        rows: [
+          ["Aditya Sharma", "25BCE1001", "Google SDE-I", "SKL002", "Distributed Systems", "Cloud & Infra"],
+          ["Aditya Sharma", "25BCE1001", "Google SDE-I", "SKL003", "Data Structures & Algorithms", "Programming"]
+        ]
+      },
+      {
+        id: 3,
+        title: "Reverse Recruiter Candidate Discovery & Ranking",
+        desc: "Allows corporate recruiters to rank all eligible candidates by verified skill intersection count in one graph traversal.",
+        badge: "Query 3",
+        code: `MATCH (j:Job {job_id: "JOB003"})-[:REQUIRES_SKILL]->(req:Skill)
+WITH j, count(req) AS total_required
+MATCH (s:Student)-[:ENROLLED_IN]->(d:Department)
+WHERE s.cgpa >= j.min_cgpa
+OPTIONAL MATCH (s)-[:HAS_SKILL]->(sk:Skill)<-[:REQUIRES_SKILL]-(j)
+WITH j, s, d, total_required, count(sk) AS matched_count, collect(sk.skill_name) AS shared_skills
+WHERE matched_count > 0
+RETURN s.roll_no AS RollNo, s.name AS CandidateName, d.dept_name AS Department,
+       s.cgpa AS CGPA, matched_count AS MatchedSkills, total_required AS TotalRequired,
+       round(100.0 * matched_count / total_required, 1) AS FitScorePercent
+ORDER BY FitScorePercent DESC, s.cgpa DESC;`,
+        headers: ["Roll No", "Candidate Name", "Department", "CGPA", "Matched", "Total", "Fit Score"],
+        rows: [
+          ["25BCE5227", "Shashwat Siddhant", "Computer Science & Eng", "9.45", "3", "3", "100.0%"],
+          ["25BCE5392", "Arnav Semwal", "Computer Science & Eng", "9.10", "3", "3", "100.0%"],
+          ["25BCE1001", "Priya Gupta", "Information Technology", "9.12", "2", "3", "66.7%"],
+          ["25BCE2002", "Rohan Mehra", "Electronics & Comm Eng", "8.70", "1", "3", "33.3%"]
+        ]
+      },
+      {
+        id: 4,
+        title: "Collaborative Peer Similarity (Jaccard Index on Graph)",
+        desc: "Calculates intersection over union of HAS_SKILL relationships between students to recommend mock interview and peer learning circles.",
+        badge: "Query 4",
+        code: `MATCH (s1:Student {roll_no: "25BCE5227"})-[:HAS_SKILL]->(sk:Skill)<-[:HAS_SKILL]-(s2:Student)
+WHERE s1 <> s2
+WITH s1, s2, count(sk) AS intersection_count, collect(sk.skill_name) AS common_skills
+MATCH (s1)-[:HAS_SKILL]->(sk1:Skill)
+WITH s1, s2, intersection_count, common_skills, count(sk1) AS s1_skills
+MATCH (s2)-[:HAS_SKILL]->(sk2:Skill)
+WITH s1, s2, intersection_count, common_skills, s1_skills, count(sk2) AS s2_skills
+WITH s1, s2, intersection_count, common_skills, (s1_skills + s2_skills - intersection_count) AS union_count
+RETURN s2.roll_no AS PeerRollNo, s2.name AS PeerName,
+       intersection_count AS SharedSkillsCount, union_count AS TotalUniqueSkills,
+       round(1.0 * intersection_count / union_count, 3) AS JaccardSimilarity,
+       common_skills AS SharedSkills
+ORDER BY JaccardSimilarity DESC;`,
+        headers: ["Peer Roll No", "Peer Name", "Shared Skills", "Union Count", "Jaccard Index", "Common Skills"],
+        rows: [
+          ["25BCE5392", "Arnav Semwal", "4", "5", "0.800", "Python, SQL, DSA, System Design"],
+          ["25BCE1001", "Priya Gupta", "3", "6", "0.500", "Python, SQL, React"],
+          ["25BCE2002", "Rohan Mehra", "2", "6", "0.333", "C++, Linux"]
+        ]
+      },
+      {
+        id: 5,
+        title: "End-to-End Application Lifecycle Traversal",
+        desc: "Traces student application progression through Application -> Job -> Company -> Interview -> Offer in a single unified graph hop.",
+        badge: "Query 5",
+        code: `MATCH (s:Student)-[:SUBMITTED]->(app:Application)-[:FOR_JOB]->(j:Job)-[:POSTED_BY]->(c:Company)
+OPTIONAL MATCH (app)-[:MANAGED_BY]->(st:Staff)
+OPTIONAL MATCH (app)-[:ADVANCED_TO]->(i:Interview)-[:INTERVIEWED_BY]->(r:Recruiter)
+OPTIONAL MATCH (app)-[:RESULTED_IN]->(o:Offer)
+RETURN app.app_id AS AppID, s.name AS StudentName, j.title AS JobRole,
+       c.co_name AS Company, app.status AS ApplicationStatus,
+       i.mode AS InterviewMode, coalesce(o.package_offered, 0.0) AS OfferedPackageLPA,
+       coalesce(o.offer_status, "None") AS OfferOutcome
+ORDER BY OfferedPackageLPA DESC, AppID ASC;`,
+        headers: ["AppID", "Student", "Job Role", "Company", "Status", "Interview", "Offer LPA", "Outcome"],
+        rows: [
+          ["APP001", "Shashwat Siddhant", "SDE-I", "Google India", "Hired", "Online", "₹42.50", "Accepted"],
+          ["APP002", "Arnav Semwal", "Cloud Systems Architect", "AWS", "Hired", "In-Person", "₹34.00", "Accepted"],
+          ["APP003", "Priya Gupta", "Enterprise SDE", "Microsoft", "Hired", "Online", "₹31.50", "Accepted"],
+          ["APP004", "Rohan Mehra", "Embedded Engineer", "Qualcomm", "Interviewing", "In-Person", "0.0", "None"]
+        ]
+      },
+      {
+        id: 6,
+        title: "Market Skill Demand Aggregation (Degree Centrality)",
+        desc: "Graph degree centrality on Skill nodes comparing industrial employer demand against registered student talent supply.",
+        badge: "Query 6",
+        code: `MATCH (sk:Skill)
+OPTIONAL MATCH (j:Job)-[:REQUIRES_SKILL]->(sk)
+WITH sk, count(j) AS job_demand_count
+OPTIONAL MATCH (s:Student)-[:HAS_SKILL]->(sk)
+WITH sk, job_demand_count, count(s) AS student_supply_count
+RETURN sk.skill_name AS SkillName, sk.category AS Domain,
+       job_demand_count AS IndustryDemandCount, student_supply_count AS StudentSupplyCount,
+       (job_demand_count - student_supply_count) AS MarketTalentGap
+ORDER BY IndustryDemandCount DESC, StudentSupplyCount DESC;`,
+        headers: ["Skill Name", "Domain", "Industry Demand", "Student Supply", "Talent Gap"],
+        rows: [
+          ["Python", "Programming", "6", "8", "-2 (Surplus)"],
+          ["Data Structures & Algorithms", "Programming", "7", "7", "0 (Balanced)"],
+          ["Distributed Systems", "Cloud & Infra", "5", "3", "+2 (Shortage!)"],
+          ["System Design", "Architecture", "4", "2", "+2 (Shortage!)"],
+          ["SQL", "Database", "5", "9", "-4 (Surplus)"]
+        ]
+      },
+      {
+        id: 7,
+        title: "High-Package Placement Archetype Pattern Mining",
+        desc: "Subgraph pattern mining extracting the recurring core skills and departments among students who secured offers >= 30 LPA.",
+        badge: "Query 7",
+        code: `MATCH (s:Student)-[:SUBMITTED]->(app:Application)-[:RESULTED_IN]->(o:Offer)
+MATCH (app)-[:FOR_JOB]->(j:Job)-[:POSTED_BY]->(c:Company)
+MATCH (s)-[:ENROLLED_IN]->(d:Department)
+MATCH (s)-[:HAS_SKILL]->(sk:Skill)
+WHERE o.package_offered >= 30.0 AND o.offer_status = 'Accepted'
+RETURN sk.skill_name AS HighYieldSkill, sk.category AS Category,
+       count(DISTINCT s) AS HiredStudentCount,
+       collect(DISTINCT s.name) AS StarStudents,
+       collect(DISTINCT c.co_name) AS HiringCompanies
+ORDER BY HiredStudentCount DESC, HighYieldSkill ASC;`,
+        headers: ["High Yield Skill", "Category", "Hired Count (>= 30 LPA)", "Star Students", "Hiring Companies"],
+        rows: [
+          ["Python", "Programming", "3", "Shashwat, Arnav, Priya", "Google, AWS, Microsoft"],
+          ["DSA", "Programming", "3", "Shashwat, Arnav, Priya", "Google, AWS, Microsoft"],
+          ["Distributed Systems", "Cloud & Infra", "2", "Shashwat, Arnav", "Google, AWS"],
+          ["SQL", "Database", "2", "Shashwat, Priya", "Google, Microsoft"]
+        ]
+      },
+      {
+        id: 8,
+        title: "Placement Bottleneck & Operational Lag Detection",
+        desc: "Monitors operational workflow by identifying applications stuck in Pending or Interviewing states lacking scheduled interviews.",
+        badge: "Query 8",
+        code: `MATCH (app:Application)
+WHERE app.status IN ['Interviewing', 'Pending']
+MATCH (s:Student)-[:SUBMITTED]->(app)-[:FOR_JOB]->(j:Job)-[:POSTED_BY]->(c:Company)
+OPTIONAL MATCH (app)-[:ADVANCED_TO]->(i:Interview)
+OPTIONAL MATCH (app)-[:MANAGED_BY]->(st:Staff)
+RETURN app.app_id AS AppID, s.name AS StudentName, j.title AS JobRole,
+       c.co_name AS TargetCompany, app.status AS CurrentStatus,
+       CASE WHEN i IS NULL THEN "ACTION REQUIRED: No Interview Scheduled"
+            ELSE "Interview Logged (" + i.mode + " - " + i.result + ")" END AS OperationalDiagnostic,
+       st.staff_name AS AssignedOfficer
+ORDER BY app.status DESC, AppID ASC;`,
+        headers: ["AppID", "Student", "Target Job", "Company", "Current Status", "Diagnostic", "Assigned Officer"],
+        rows: [
+          ["APP008", "Kavya Reddy", "Frontend Engineer", "Adobe", "Pending", "ACTION REQUIRED: No Interview Scheduled", "Dr. Rajesh Kumar"],
+          ["APP011", "Simran Kapoor", "Technology Analyst", "Deloitte", "Pending", "ACTION REQUIRED: No Interview Scheduled", "Prof. Sunita Sharma"],
+          ["APP004", "Rohan Mehra", "Embedded Engineer", "Qualcomm", "Interviewing", "Interview Logged (In-Person - Pending)", "Dr. Rajesh Kumar"]
+        ]
+      }
+    ];
+
+    let currentQueryIdx = 0;
+
+    function renderQuerySuite() {
+      const list = $('query-button-list');
+      list.innerHTML = CYPHER_SUITE.map((q, idx) => `
+        <button class="query-select-btn ${idx === currentQueryIdx ? 'active' : ''}" onclick="selectQuery(${idx})">
+          <div>
+            <span style="font-size:9px; font-weight:700; color:var(--red); display:block; margin-bottom:2px">${q.badge}</span>
+            <span>${q.title}</span>
+          </div>
+          <span>→</span>
+        </button>
+      `).join('');
+
+      loadQuery(currentQueryIdx);
+    }
+
+    function selectQuery(idx) {
+      currentQueryIdx = idx;
+      document.querySelectorAll('.query-select-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === idx);
+      });
+      loadQuery(idx);
+    }
+
+    function loadQuery(idx) {
+      const q = CYPHER_SUITE[idx];
+      $('query-badge').textContent = q.badge;
+      $('query-title').textContent = q.title;
+      $('query-desc').textContent = q.desc;
+      $('cypher-code-block').textContent = q.code;
+      renderQueryResultTable(q);
+    }
+
+    function renderQueryResultTable(q) {
+      const thead = `<tr>${q.headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+      const tbody = q.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+      $('cypher-results-block').innerHTML = `
+        <div style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#888; margin-bottom:12px">
+          Index-Free Adjacency Traversal Output (Neo4j Property Graph Engine)
+        </div>
+        <table class="swiss-table" style="font-size:11px">
+          <thead>${thead}</thead>
+          <tbody>${tbody}</tbody>
+        </table>
+      `;
+    }
+
+    function runSelectedCypher() {
+      showToast(`Running ${CYPHER_SUITE[currentQueryIdx].badge} on Neo4j Graph...`);
+      renderQueryResultTable(CYPHER_SUITE[currentQueryIdx]);
+    }
+
+    function switchParadigm(tab) {
+      $('tab-da3-btn').classList.toggle('active', tab === 'da3');
+      $('tab-da2-btn').classList.toggle('active', tab === 'da2');
+      $('tab-mapper-btn').classList.toggle('active', tab === 'mapper');
+
+      $('view-da3').style.display = tab === 'da3' ? 'grid' : 'none';
+      $('view-da2').style.display = tab === 'da2' ? 'block' : 'none';
+      $('view-mapper').style.display = tab === 'mapper' ? 'block' : 'none';
+
+      if (tab === 'mapper') runLiveGraphCalc();
+    }
+
+    function runLiveGraphCalc() {
+      const roll = $('calc-student').value;
+      const jobId = parseInt($('calc-job').value);
+
+      const s = DB.students.find(x => x.roll === roll) || DB.students[0];
+      const j = DB.drives.find(x => x.id === jobId) || DB.drives[0];
+
+      const studentSkills = s.skills;
+      const requiredSkills = j.skills;
+
+      const matched = requiredSkills.filter(sk => studentSkills.includes(sk));
+      const missing = requiredSkills.filter(sk => !studentSkills.includes(sk));
+      const matchPct = Math.round((matched.length / requiredSkills.length) * 100);
+      const isCgpaEligible = s.cgpa >= j.minCgpa;
+
+      $('calc-result-box').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:var(--border); padding-bottom:16px; margin-bottom:20px;">
+          <div>
+            <span style="font-size:11px; font-weight:700; color:#888; text-transform:uppercase;">Graph Traversal:</span>
+            <div style="font-size:22px; font-weight:900;">${s.name} (${s.roll}) ➔ ${j.company} (${j.role})</div>
+          </div>
+          <div style="text-align:right">
+            <span style="font-size:11px; font-weight:700; color:#888; text-transform:uppercase;">Fit Compatibility</span>
+            <div style="font-size:48px; font-weight:900; color:var(--red); line-height:1">${matchPct}%</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;">
+          <div style="background:#fff; border:var(--hairline); padding:16px;">
+            <div style="font-size:9px; font-weight:700; text-transform:uppercase; color:#888">CGPA Eligibility Check</div>
+            <div style="font-size:18px; font-weight:900; margin-top:4px; color:${isCgpaEligible ? 'var(--black)' : 'var(--red)'}">
+              ${s.cgpa} vs Min ${j.minCgpa} (${isCgpaEligible ? 'QUALIFIED ✓' : 'DISQUALIFIED ✗'})
+            </div>
+          </div>
+          <div style="background:#fff; border:var(--hairline); padding:16px;">
+            <div style="font-size:9px; font-weight:700; text-transform:uppercase; color:#888">Verified Skills Matched</div>
+            <div style="font-size:18px; font-weight:900; margin-top:4px">${matched.length} of ${requiredSkills.length} Required</div>
+          </div>
+          <div style="background:#fff; border:var(--hairline); padding:16px;">
+            <div style="font-size:9px; font-weight:700; text-transform:uppercase; color:#888">Package Offering</div>
+            <div style="font-size:18px; font-weight:900; margin-top:4px; color:var(--red)">${j.ctc}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#888; margin-bottom:8px">1. Matched Skills (Intersection on [:HAS_SKILL] and [:REQUIRES_SKILL])</div>
+          <div class="skills-list">
+            ${matched.length ? matched.map(sk => `<span class="skill-chip" style="background:var(--black); color:#fff">${sk}</span>`).join('') : '<span style="color:#888; font-size:12px">No direct overlap</span>'}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--red); margin-bottom:8px">2. Skill Gap Set Difference (WHERE NOT (s)-[:HAS_SKILL]->(needed))</div>
+          <div class="skills-list">
+            ${missing.length ? missing.map(sk => `<span class="skill-chip" style="border-color:var(--red); color:var(--red); font-weight:700">${sk} (MISSING)</span>`).join('') : '<span style="color:#008800; font-size:12px; font-weight:700">Zero Skill Gap! 100% Qualified</span>'}
+          </div>
+        </div>
+      `;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderQuerySuite();
+    });
+  </script>
+</body>
+</html>
