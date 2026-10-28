@@ -25,7 +25,7 @@
       <a href="students.html"  class="nav-link">Students</a>
       <a href="analytics.html" class="nav-link">Analytics</a>
       <a href="system.html"    class="nav-link">DA2/DA3 Engine</a>
-      <a href="db.html"        class="nav-link" style="color:#39FF14;font-weight:700;border-left:2px solid #39FF14">DB_TERMINAL</a>
+      <a href="db.html"        class="nav-link" id="nav-db" style="color:#58a6ff;font-weight:600">DB Backend</a>
     </div>
     <div class="nav-right">
       <span class="nav-role-label">ROLE</span>
@@ -91,19 +91,52 @@
             </div>
             <div class="modal-body">
               <div class="apply-form">
-                <div class="form-group"><label class="form-label">Role Title</label><input class="form-input" type="text" placeholder="e.g. Software Engineer" /></div>
-                <div class="form-group"><label class="form-label">Package (CTC)</label><input class="form-input" type="text" placeholder="e.g. ₹28 LPA" /></div>
-                <div class="form-group"><label class="form-label">Minimum CGPA</label><input class="form-input" type="number" placeholder="e.g. 8.0" min="0" max="10" step="0.1" /></div>
-                <div class="form-group"><label class="form-label">Eligible Departments</label><input class="form-input" type="text" placeholder="e.g. CSE, IT, ECE" /></div>
-                <div class="form-group"><label class="form-label">Application Deadline</label><input class="form-input" type="date" /></div>
-                <div class="form-group"><label class="form-label">Job Description</label><textarea class="form-input" rows="4" placeholder="Describe the role, rounds, and expectations…" style="resize:vertical"></textarea></div>
-                <div class="form-group"><label class="form-label">Required Skills</label><input class="form-input" type="text" placeholder="e.g. Python, DSA, System Design" /></div>
-                <button class="btn-primary" onclick="closeModal('post-job-modal');showToast('Job drive posted successfully!')">Post Drive →</button>
+                <div class="form-group"><label class="form-label">Company Name</label><input class="form-input" id="new-drive-co" type="text" placeholder="e.g. Netflix / Uber" /></div>
+                <div class="form-group"><label class="form-label">Role Title</label><input class="form-input" id="new-drive-role" type="text" placeholder="e.g. Software Engineer" /></div>
+                <div class="form-group"><label class="form-label">Package (CTC)</label><input class="form-input" id="new-drive-ctc" type="text" placeholder="e.g. ₹30 LPA" /></div>
+                <div class="form-group"><label class="form-label">Minimum CGPA</label><input class="form-input" id="new-drive-cgpa" type="number" placeholder="e.g. 8.0" min="0" max="10" step="0.1" /></div>
+                <div class="form-group"><label class="form-label">Eligible Departments</label><input class="form-input" id="new-drive-depts" type="text" placeholder="e.g. CSE, IT, ECE" /></div>
+                <div class="form-group"><label class="form-label">Application Deadline</label><input class="form-input" id="new-drive-deadline" type="date" /></div>
+                <div class="form-group"><label class="form-label">Job Description</label><textarea class="form-input" id="new-drive-desc" rows="3" placeholder="Describe the role, rounds, and expectations…" style="resize:vertical"></textarea></div>
+                <div class="form-group"><label class="form-label">Required Skills</label><input class="form-input" id="new-drive-skills" type="text" placeholder="e.g. Python, DSA, System Design" /></div>
+                <button class="btn-primary" onclick="submitNewDrive()">Post Drive to DB →</button>
               </div>
             </div>
           </div>
         </div>`;
       document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    function submitNewDrive() {
+      const co = ($('new-drive-co').value || '').trim() || 'Tech Innovators';
+      const role = ($('new-drive-role').value || '').trim() || 'Software Engineer';
+      const ctc = ($('new-drive-ctc').value || '').trim() || '₹24 LPA';
+      const minCgpa = parseFloat($('new-drive-cgpa').value) || 7.5;
+      const depts = ($('new-drive-depts').value || 'CSE, IT').split(',').map(s=>s.trim().toUpperCase());
+      const deadline = $('new-drive-deadline').value || '20 Dec 2026';
+      const desc = ($('new-drive-desc').value || '').trim() || 'Core software engineering role.';
+      const skills = ($('new-drive-skills').value || 'Python, DSA').split(',').map(s=>s.trim());
+
+      const newDrive = {
+        id: DB.drives.length + 1,
+        company: co,
+        role: role,
+        ctc: ctc,
+        type: 'Full-Time',
+        minCgpa: minCgpa,
+        depts: depts,
+        deadline: deadline,
+        applicants: 0,
+        capacity: 10,
+        description: desc,
+        skills: skills,
+        status: 'open'
+      };
+      DB.drives.unshift(newDrive);
+      DB.save();
+      closeModal('post-job-modal');
+      showToast(`✓ Job drive for ${co} (${role}) committed to database!`);
+      renderDrivesPage();
     }
   </script>
 </body>

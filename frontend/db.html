@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>CPP — Database Admin</title>
+<title>CPP — Database Admin Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -20,17 +20,20 @@ html{font-size:13px;height:100%}
 body{font-family:var(--font);background:var(--bg0);color:var(--text);height:100%;display:flex;flex-direction:column;overflow:hidden}
 
 /* ─── TOP BAR ─── */
-.topbar{height:40px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:16px;flex-shrink:0;z-index:100}
+.topbar{height:42px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:16px;flex-shrink:0;z-index:100}
 .topbar-logo{font-weight:600;font-size:13px;color:var(--blue);letter-spacing:-.02em;display:flex;align-items:center;gap:6px}
 .topbar-logo svg{width:16px;height:16px}
 .topbar-sep{width:1px;height:20px;background:var(--border)}
 .topbar-conn{font-size:11px;color:var(--text2);font-family:var(--mono);display:flex;align-items:center;gap:6px}
-.conn-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.sync-badge{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(63,185,80,.12);color:var(--green);border:1px solid rgba(63,185,80,.3)}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .topbar-btn{font-family:var(--font);font-size:11px;color:var(--text2);background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer;border-radius:4px;transition:all .15s}
 .topbar-btn:hover{color:var(--text);border-color:var(--border2)}
 .topbar-btn.primary{background:var(--blue2);color:#fff;border-color:var(--blue2)}
 .topbar-btn.primary:hover{background:#388bfd}
+.alert-toast{display:none;position:fixed;top:50px;right:20px;background:#238636;color:#fff;padding:8px 16px;border-radius:4px;font-size:11px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.5);animation:slideIn .2s}
+@keyframes slideIn{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
 
 /* ─── LAYOUT ─── */
 .app-body{display:flex;flex:1;overflow:hidden}
@@ -43,7 +46,7 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);height:100%
 .sidebar-search input::placeholder{color:var(--text3)}
 .sidebar-tree{flex:1;overflow-y:auto;padding:4px 0}
 .tree-section{padding:6px 12px 2px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
-.tree-item{display:flex;align-items:center;gap:6px;padding:4px 12px 4px 20px;cursor:pointer;font-size:12px;color:var(--text2);transition:background .1s;white-space:nowrap;user-select:none}
+.tree-item{display:flex;align-items:center;gap:6px;padding:5px 12px 5px 20px;cursor:pointer;font-size:12px;color:var(--text2);transition:background .1s;white-space:nowrap;user-select:none}
 .tree-item:hover{background:var(--bg2);color:var(--text)}
 .tree-item.active{background:var(--bg3);color:var(--blue)}
 .tree-item svg{width:13px;height:13px;flex-shrink:0;opacity:.6}
@@ -57,56 +60,48 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);height:100%
 .tab-row{height:36px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:end;padding:0 12px;gap:0;flex-shrink:0;overflow-x:auto}
 .tab{font-size:12px;padding:8px 16px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:6px}
 .tab:hover{color:var(--text)}
-.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
-.tab-close{opacity:.4;font-size:10px;margin-left:2px;transition:opacity .1s}
-.tab:hover .tab-close{opacity:.8}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);background:var(--bg0)}
 
-/* ─── TOOLBAR ─── */
-.toolbar{height:38px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:6px;flex-shrink:0}
-.tb-btn{font-family:var(--font);font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);padding:4px 10px;cursor:pointer;border-radius:3px;transition:all .1s;display:flex;align-items:center;gap:4px}
-.tb-btn:hover{color:var(--text);border-color:var(--border2)}
-.tb-btn svg{width:12px;height:12px}
-.tb-sep{width:1px;height:18px;background:var(--border)}
-.tb-info{margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono)}
-
-/* ─── SQL EDITOR ─── */
-.sql-editor{background:var(--bg1);border-bottom:1px solid var(--border);flex-shrink:0;display:none}
-.sql-editor.show{display:block}
-.sql-editor textarea{width:100%;height:90px;background:var(--bg1);border:none;color:var(--text);font-family:var(--mono);font-size:12px;padding:10px 14px;resize:none;outline:none;line-height:1.5}
-.sql-editor-bar{background:var(--bg2);border-top:1px solid var(--border);padding:4px 8px;display:flex;align-items:center;gap:6px}
-
-/* ─── FILTERS ─── */
+/* ─── TOOLBAR & FILTERS ─── */
 .filter-row{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--bg1)}
 .filter-input{background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;padding:4px 8px;border-radius:3px;outline:none;min-width:200px;transition:border-color .15s}
 .filter-input:focus{border-color:var(--blue2)}
 .filter-input::placeholder{color:var(--text3)}
 .filter-select{background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;padding:4px 8px;border-radius:3px;outline:none;cursor:pointer}
 .filter-count{margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono)}
+.tb-btn{font-family:var(--font);font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);padding:3px 8px;cursor:pointer;border-radius:3px;transition:all .1s}
+.tb-btn:hover{color:var(--text);border-color:var(--border2)}
 
 /* ─── DATA TABLE ─── */
 .table-wrap{flex:1;overflow:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 thead{position:sticky;top:0;z-index:10}
 thead tr{background:var(--bg2)}
-th{padding:7px 12px;text-align:left;font-weight:500;color:var(--text2);font-size:11px;letter-spacing:.03em;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;transition:color .1s}
-th:hover{color:var(--text)}
-th .sort-icon{margin-left:4px;opacity:.3;font-size:9px}
-th.sort-asc .sort-icon,th.sort-desc .sort-icon{opacity:1;color:var(--blue)}
-td{padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;vertical-align:middle;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+th{padding:7px 12px;text-align:left;font-weight:500;color:var(--text2);font-size:11px;letter-spacing:.03em;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none}
+td{padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;vertical-align:middle;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
 tbody tr{transition:background .08s;cursor:pointer}
 tbody tr:hover{background:var(--bg2)}
-tbody tr.selected{background:var(--bg3)}
+tbody tr.highlight-new{animation:flashRow 2s}
+@keyframes flashRow{0%{background:rgba(63,185,80,.35)}100%{background:transparent}}
 td.null-val{color:var(--text3);font-style:italic}
 td.num-val{color:var(--purple)}
-td.pk-val{color:var(--yellow)}
+td.pk-val{color:var(--yellow);font-weight:500}
 
 /* ─── BADGES ─── */
-.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;font-family:var(--font);letter-spacing:.02em}
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;font-family:var(--font);letter-spacing:.02em;text-transform:uppercase}
 .b-green{background:rgba(63,185,80,.15);color:var(--green)}
 .b-red{background:rgba(248,81,73,.15);color:var(--red)}
 .b-blue{background:rgba(88,166,255,.15);color:var(--blue)}
 .b-yellow{background:rgba(210,153,34,.15);color:var(--yellow)}
 .b-purple{background:rgba(188,140,255,.15);color:var(--purple)}
+
+/* ─── ACTION BUTTONS ─── */
+.action-btn-grp{display:flex;gap:4px;align-items:center}
+.action-btn{font-family:var(--font);font-size:10px;font-weight:500;padding:2px 6px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all .1s}
+.action-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.action-btn.hire:hover{background:rgba(63,185,80,.2);color:var(--green);border-color:var(--green)}
+.action-btn.shortlist:hover{background:rgba(88,166,255,.2);color:var(--blue);border-color:var(--blue)}
+.action-btn.reject:hover{background:rgba(248,81,73,.2);color:var(--red);border-color:var(--red)}
 
 /* ─── STATUS BAR ─── */
 .statusbar{height:24px;background:var(--bg1);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:16px;flex-shrink:0}
@@ -131,8 +126,12 @@ td.pk-val{color:var(--yellow)}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px}
 .bar-label{min-width:50px;color:var(--text2);font-family:var(--mono)}
 .bar-track{flex:1;height:8px;background:var(--bg3);border-radius:2px;overflow:hidden}
-.bar-fill{height:100%;border-radius:2px;background:var(--blue2);transition:width 1s ease}
+.bar-fill{height:100%;border-radius:2px;background:var(--blue2);transition:width .8s ease}
 .bar-val{min-width:36px;text-align:right;color:var(--text3);font-family:var(--mono)}
+
+/* ─── SQL CONSOLE ─── */
+.run-btn{background:var(--green);color:#000;border:none;font-family:var(--font);font-size:11px;font-weight:600;padding:5px 14px;border-radius:3px;cursor:pointer;transition:opacity .1s}
+.run-btn:hover{opacity:.85}
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:6px;height:6px}
@@ -140,37 +139,34 @@ td.pk-val{color:var(--yellow)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:#4a5a8a}
 
-/* ─── QUERY PANEL ─── */
-.query-panel{display:flex;flex-direction:column;height:100%}
-.qp-top{padding:12px;border-bottom:1px solid var(--border);flex-shrink:0}
-.qp-editor{flex:1;overflow:hidden;position:relative}
-.qp-editor textarea{width:100%;height:100%;background:var(--bg0);border:none;color:#cdd6f4;font-family:var(--mono);font-size:12px;padding:12px;resize:none;outline:none;line-height:1.7}
-.qp-results{height:40%;border-top:1px solid var(--border);overflow:auto}
-.run-btn{background:var(--green);color:#000;border:none;font-family:var(--font);font-size:11px;font-weight:600;padding:5px 14px;border-radius:3px;cursor:pointer;transition:opacity .1s}
-.run-btn:hover{opacity:.85}
-
-/* ─── RESPONSIVE ─── */
 @media(max-width:900px){.sidebar{display:none}.dash-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
 
+<!-- ALERT TOAST -->
+<div class="alert-toast" id="alert-toast">⚡ Real-time update detected!</div>
+
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-logo">
     <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="9" rx="1" stroke="#58a6ff" stroke-width="1.2"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" stroke="#58a6ff" stroke-width="1.2"/><line x1="1" y1="7" x2="15" y2="7" stroke="#58a6ff" stroke-width="1.2"/></svg>
-    CPP Database
+    CPP Database Backend
   </div>
   <div class="topbar-sep"></div>
   <div class="topbar-conn">
     <div class="conn-dot"></div>
-    localhost:5432 / campus_placement_db
+    postgresql://localhost:5432/campus_placement_db
+  </div>
+  <div class="sync-badge">
+    <span>●</span> Real-Time Sync Active
   </div>
   <div class="topbar-right">
     <span id="top-clock" style="font-size:10px;color:var(--text3);font-family:var(--mono)"></span>
+    <button class="topbar-btn" onclick="resetDatabase()" title="Reset database to initial seed records">Reset DB</button>
     <div class="topbar-sep"></div>
     <a href="index.html" style="text-decoration:none"><button class="topbar-btn">← Portal UI</button></a>
-    <button class="topbar-btn primary" onclick="showTab('query')">Run Query</button>
+    <button class="topbar-btn primary" onclick="showTab('query')">SQL Console</button>
   </div>
 </div>
 
@@ -183,8 +179,7 @@ td.pk-val{color:var(--yellow)}
       <input type="text" placeholder="Filter tables…" id="sidebar-filter" oninput="filterSidebar(this.value)"/>
     </div>
     <div class="sidebar-tree" id="sidebar-tree">
-      <div class="tree-section">Tables</div>
-      <!-- JS populated -->
+      <!-- Populated by JS -->
     </div>
   </div>
 
@@ -193,9 +188,9 @@ td.pk-val{color:var(--yellow)}
     <!-- TABS -->
     <div class="tab-row">
       <div class="tab active" id="tab-dashboard" onclick="showTab('dashboard')">📊 Dashboard</div>
-      <div class="tab" id="tab-students"  onclick="showTab('students')">students</div>
-      <div class="tab" id="tab-drives"    onclick="showTab('drives')">job_postings</div>
       <div class="tab" id="tab-apps"      onclick="showTab('apps')">applications</div>
+      <div class="tab" id="tab-drives"    onclick="showTab('drives')">job_postings</div>
+      <div class="tab" id="tab-students"  onclick="showTab('students')">students</div>
       <div class="tab" id="tab-audit"     onclick="showTab('audit')">audit_logs</div>
       <div class="tab" id="tab-graph"     onclick="showTab('graph')">🕸 graph_queries</div>
       <div class="tab" id="tab-query"     onclick="showTab('query')">⌨ SQL Console</div>
@@ -204,10 +199,10 @@ td.pk-val{color:var(--yellow)}
     <!-- ═══ DASHBOARD VIEW ═══ -->
     <div id="view-dashboard" style="overflow:auto;flex:1">
       <div class="dash-grid">
-        <div class="metric-card"><div class="mc-label">Total Students</div><div class="mc-val blue" id="m-students">—</div><div class="mc-sub">rows in students</div></div>
+        <div class="metric-card"><div class="mc-label">Total Applications</div><div class="mc-val blue" id="m-apps">—</div><div class="mc-sub">live in applications</div></div>
         <div class="metric-card"><div class="mc-label">Active Drives</div><div class="mc-val blue" id="m-drives">—</div><div class="mc-sub">rows in job_postings</div></div>
-        <div class="metric-card"><div class="mc-label">Placed</div><div class="mc-val green" id="m-placed">—</div><div class="mc-sub">status = 'hired'</div></div>
-        <div class="metric-card"><div class="mc-label">Companies</div><div class="mc-val" id="m-companies">—</div><div class="mc-sub">DISTINCT co_name</div></div>
+        <div class="metric-card"><div class="mc-label">Placed Students</div><div class="mc-val green" id="m-placed">—</div><div class="mc-sub">status = 'hired'</div></div>
+        <div class="metric-card"><div class="mc-label">Audit Logs</div><div class="mc-val" id="m-audits">—</div><div class="mc-sub">trigger records</div></div>
         <div class="metric-card"><div class="mc-label">Avg CTC</div><div class="mc-val" id="m-avgctc">—</div><div class="mc-sub">FROM offers</div></div>
         <div class="metric-card"><div class="mc-label">Highest CTC</div><div class="mc-val green" id="m-highctc">—</div><div class="mc-sub">MAX(package)</div></div>
       </div>
@@ -224,12 +219,69 @@ td.pk-val{color:var(--yellow)}
       <!-- Recent activity -->
       <div style="padding:0 20px 20px">
         <div class="chart-card">
-          <div class="chart-title">Recent Activity — audit_logs <span class="chart-sub">ORDER BY log_timestamp DESC LIMIT 8</span></div>
+          <div class="chart-title">Recent Audit Logs — trg_application_status <span class="chart-sub">ORDER BY log_timestamp DESC LIMIT 8</span></div>
           <table style="width:100%">
-            <thead><tr><th>LOG_ID</th><th>TIMESTAMP</th><th>APP_ID</th><th>STUDENT</th><th>OLD_STATUS</th><th>NEW_STATUS</th><th>DB_USER</th></tr></thead>
+            <thead><tr><th>LOG_ID</th><th>TIMESTAMP</th><th>APP_ID</th><th>STUDENT</th><th>ACTION</th><th>OLD_STATUS</th><th>NEW_STATUS</th><th>CHANGED_BY</th></tr></thead>
             <tbody id="dash-audit"></tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- ═══ APPLICATIONS VIEW (CONNECTED LIVE) ═══ -->
+    <div id="view-apps" style="display:none;flex:1;flex-direction:column;overflow:hidden" class="table-view">
+      <div class="filter-row">
+        <input class="filter-input" placeholder="Search applicant, roll_no, company, role…" oninput="filterApps(this.value)" id="apps-search"/>
+        <select class="filter-select" onchange="filterAppStatus(this.value)" id="apps-status-filter">
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="shortlisted">Shortlisted</option>
+          <option value="hired">Hired</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <span class="filter-count" id="apps-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>app_id</th><th>roll_no</th><th>student_name</th><th>dept</th><th>job_id</th>
+            <th>company</th><th>role</th><th>applied_on</th><th>status</th><th>package_offered</th><th>quick_actions</th>
+          </tr></thead>
+          <tbody id="tbody-apps"></tbody>
+        </table>
+      </div>
+      <div class="statusbar">
+        <div class="sb-item green"><span>●</span> Connected Live</div>
+        <div class="sb-item" id="sb-apps">0 rows</div>
+        <div class="sb-item">applications — campus_placement_db</div>
+      </div>
+    </div>
+
+    <!-- ═══ DRIVES VIEW ═══ -->
+    <div id="view-drives" style="display:none;flex:1;flex-direction:column;overflow:hidden" class="table-view">
+      <div class="filter-row">
+        <input class="filter-input" placeholder="Search company, role, type…" oninput="filterDrives(this.value)" id="drv-search"/>
+        <select class="filter-select" onchange="filterDriveType(this.value)">
+          <option value="">All types</option>
+          <option value="Full-Time">Full-Time</option>
+          <option value="Internship">Internship</option>
+        </select>
+        <span class="filter-count" id="drv-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>job_id</th><th>company</th><th>role</th><th>package_lpa</th>
+            <th>type</th><th>min_cgpa</th><th>eligible_depts</th><th>deadline</th>
+            <th>applicants (live)</th><th>seats</th><th>status</th>
+          </tr></thead>
+          <tbody id="tbody-drives"></tbody>
+        </table>
+      </div>
+      <div class="statusbar">
+        <div class="sb-item green"><span>●</span> Connected Live</div>
+        <div class="sb-item" id="sb-drives">0 rows</div>
+        <div class="sb-item">job_postings — campus_placement_db</div>
       </div>
     </div>
 
@@ -249,81 +301,24 @@ td.pk-val{color:var(--yellow)}
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th onclick="sortTable('students','idx')">idx <span class="sort-icon">▼</span></th>
-            <th onclick="sortTable('students','roll')">roll_no <span class="sort-icon">▼</span></th>
-            <th onclick="sortTable('students','name')">name <span class="sort-icon">▼</span></th>
-            <th onclick="sortTable('students','dept')">dept <span class="sort-icon">▼</span></th>
-            <th onclick="sortTable('students','cgpa')">cgpa <span class="sort-icon">▼</span></th>
-            <th>skills[]</th>
-            <th onclick="sortTable('students','status')">status <span class="sort-icon">▼</span></th>
-            <th onclick="sortTable('students','offer')">offer_lpa <span class="sort-icon">▼</span></th>
-            <th>company</th>
+            <th>idx</th><th>roll_no</th><th>name</th><th>dept</th><th>cgpa</th>
+            <th>skills[]</th><th>status</th><th>offer_lpa</th><th>company</th>
           </tr></thead>
           <tbody id="tbody-students"></tbody>
         </table>
       </div>
       <div class="statusbar">
-        <div class="sb-item green"><span>●</span> Connected</div>
+        <div class="sb-item green"><span>●</span> Connected Live</div>
         <div class="sb-item" id="sb-students">0 rows</div>
         <div class="sb-item">students — campus_placement_db</div>
       </div>
     </div>
 
-    <!-- ═══ DRIVES VIEW ═══ -->
-    <div id="view-drives" style="display:none;flex:1;flex-direction:column;overflow:hidden" class="table-view">
-      <div class="filter-row">
-        <input class="filter-input" placeholder="Search company, role, type…" oninput="filterDrives(this.value)" id="drv-search"/>
-        <select class="filter-select" onchange="filterDriveType(this.value)">
-          <option value="">All types</option>
-          <option value="Full Time">Full Time</option>
-          <option value="Internship">Internship</option>
-        </select>
-        <span class="filter-count" id="drv-count"></span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>job_id</th><th>company</th><th>role</th><th>package_lpa</th>
-            <th>type</th><th>min_cgpa</th><th>eligible_depts</th><th>deadline</th>
-            <th>applicants</th><th>seats</th>
-          </tr></thead>
-          <tbody id="tbody-drives"></tbody>
-        </table>
-      </div>
-      <div class="statusbar">
-        <div class="sb-item green"><span>●</span> Connected</div>
-        <div class="sb-item" id="sb-drives">0 rows</div>
-        <div class="sb-item">job_postings — campus_placement_db</div>
-      </div>
-    </div>
-
-    <!-- ═══ APPLICATIONS VIEW ═══ -->
-    <div id="view-apps" style="display:none;flex:1;flex-direction:column;overflow:hidden" class="table-view">
-      <div class="filter-row">
-        <input class="filter-input" placeholder="Filter applications…" oninput="filterApps(this.value)"/>
-        <span class="filter-count" id="apps-count"></span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>app_id</th><th>roll_no</th><th>student_name</th><th>job_id</th>
-            <th>company</th><th>role</th><th>applied_on</th><th>status</th><th>package_offered</th>
-          </tr></thead>
-          <tbody id="tbody-apps"></tbody>
-        </table>
-      </div>
-      <div class="statusbar">
-        <div class="sb-item green"><span>●</span> Connected</div>
-        <div class="sb-item" id="sb-apps">0 rows</div>
-        <div class="sb-item">applications — campus_placement_db</div>
-      </div>
-    </div>
-
-    <!-- ═══ AUDIT LOG VIEW ═══ -->
+    <!-- ═══ AUDIT LOG VIEW (LIVE TRIGGERS) ═══ -->
     <div id="view-audit" style="display:none;flex:1;flex-direction:column;overflow:hidden" class="table-view">
       <div class="filter-row">
-        <span style="font-size:11px;color:var(--text2)">trg_application_status → application_audit_logs</span>
-        <span class="filter-count" id="audit-count">8 rows</span>
+        <span style="font-size:11px;color:var(--text2)">PostgreSQL Trigger Target: <strong style="color:var(--blue)">trg_application_status → application_audit_logs</strong></span>
+        <span class="filter-count" id="audit-count"></span>
       </div>
       <div class="table-wrap">
         <table>
@@ -335,8 +330,8 @@ td.pk-val{color:var(--yellow)}
         </table>
       </div>
       <div class="statusbar">
-        <div class="sb-item green"><span>●</span> Connected</div>
-        <div class="sb-item">8 rows</div>
+        <div class="sb-item green"><span>●</span> Trigger Active</div>
+        <div class="sb-item" id="sb-audit">0 rows</div>
         <div class="sb-item">application_audit_logs — campus_placement_db</div>
       </div>
     </div>
@@ -370,14 +365,14 @@ td.pk-val{color:var(--yellow)}
         <span style="margin-left:auto;font-size:10px;color:var(--text3);font-family:var(--mono)" id="query-time"></span>
       </div>
       <div style="flex:1;overflow:hidden;position:relative">
-        <textarea id="sql-area" style="width:100%;height:45%;background:var(--bg0);border:none;border-bottom:2px solid var(--border2);color:#cdd6f4;font-family:var(--mono);font-size:12px;padding:12px;resize:none;outline:none;line-height:1.7" placeholder="-- Write your SQL here&#10;SELECT * FROM students WHERE cgpa > 8.5 ORDER BY cgpa DESC;"></textarea>
+        <textarea id="sql-area" style="width:100%;height:45%;background:var(--bg0);border:none;border-bottom:2px solid var(--border2);color:#cdd6f4;font-family:var(--mono);font-size:12px;padding:12px;resize:none;outline:none;line-height:1.7" placeholder="-- Try live SQL queries:&#10;SELECT * FROM applications ORDER BY applied_on DESC;&#10;SELECT * FROM audit_logs ORDER BY log_timestamp DESC;&#10;SELECT * FROM students WHERE cgpa > 8.5;&#10;SELECT * FROM job_postings;"></textarea>
         <div style="padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:10px;color:var(--text3)">Query Results</div>
         <div style="height:calc(55% - 32px);overflow:auto">
           <table id="query-result-table" style="width:100%">
             <thead id="qr-thead"></thead>
             <tbody id="qr-tbody"></tbody>
           </table>
-          <div id="qr-msg" style="padding:20px 14px;font-size:11px;color:var(--text3);font-family:var(--mono)">No query run yet.</div>
+          <div id="qr-msg" style="padding:20px 14px;font-size:11px;color:var(--text3);font-family:var(--mono)">Click 'Run' or press Ctrl+Enter to execute SQL query.</div>
         </div>
       </div>
       <div class="statusbar">
@@ -389,22 +384,12 @@ td.pk-val{color:var(--yellow)}
   </div><!-- /main -->
 </div><!-- /app-body -->
 
-<script src="../frontend/data.js"></script>
+<script src="data.js"></script>
 <script>
-/* ══ SHARED DATA BRIDGE ══
-   Reads from DB (the shared data.js object) — same source as portal UI
-   Any update to DB.students / DB.drives in data.js is instantly reflected here */
-
-const AUDIT_ROWS = [
-  {id:'LOG001',ts:'2026-10-27 17:05:48',app:'APP102',stu:'Aditya Sharma',  act:'INSERT',old:'NULL',       nw:'Pending',     user:'postgres'},
-  {id:'LOG002',ts:'2026-10-26 14:22:11',app:'APP001',stu:'Aditya Sharma',  act:'UPDATE',old:'Pending',    nw:'Shortlisted', user:'recruiter_google'},
-  {id:'LOG003',ts:'2026-10-26 16:45:00',app:'APP001',stu:'Aditya Sharma',  act:'UPDATE',old:'Shortlisted',nw:'Hired',       user:'recruiter_google'},
-  {id:'LOG004',ts:'2026-10-25 09:10:32',app:'APP002',stu:'Arnav Semwal',   act:'UPDATE',old:'Pending',    nw:'Hired',       user:'recruiter_aws'},
-  {id:'LOG005',ts:'2026-10-25 11:00:00',app:'APP003',stu:'Priya Gupta',    act:'UPDATE',old:'Interviewing',nw:'Hired',      user:'recruiter_msft'},
-  {id:'LOG006',ts:'2026-10-24 08:55:12',app:'APP008',stu:'Kavya Reddy',    act:'INSERT',old:'NULL',       nw:'Pending',     user:'postgres'},
-  {id:'LOG007',ts:'2026-10-23 15:30:45',app:'APP011',stu:'Simran Kapoor',  act:'INSERT',old:'NULL',       nw:'Pending',     user:'postgres'},
-  {id:'LOG008',ts:'2026-10-23 17:20:01',app:'APP004',stu:'Rohan Mehra',    act:'UPDATE',old:'Pending',    nw:'Interviewing',user:'recruiter_qualcomm'},
-];
+/* ═══════════════════════════════════════════════════════
+   CAMPUS PLACEMENT PORTAL — DATABASE ADMIN LOGIC
+   Fully connected to DB in data.js with real-time sync
+═══════════════════════════════════════════════════════ */
 
 const GRAPH_DATA = {
   q1:{cypher:`MATCH (s:Student {roll_no:"25BCE5227"})-[:HAS_SKILL]->(sk:Skill)<-[:REQUIRES_SKILL]-(j:Job)-[:POSTED_BY]->(c:Company)\nWHERE s.cgpa >= j.min_cgpa\nRETURN j.title AS role, c.co_name AS company, count(sk) AS matched_skills,\n       round(100.0*count(sk)/3,1) AS match_pct\nORDER BY match_pct DESC;`,
@@ -430,79 +415,94 @@ const GRAPH_DATA = {
     rows:[['APP008','Kavya Reddy','Frontend Engineer','Adobe','Pending','⚠ ACTION REQUIRED'],['APP011','Simran Kapoor','Technology Analyst','Deloitte','Pending','⚠ ACTION REQUIRED'],['APP004','Rohan Mehra','Embedded Engineer','Qualcomm','Interviewing','✓ OK']]},
 };
 
-/* ── HELPERS ── */
 const $ = id => document.getElementById(id);
 const statusBadge = s => {
-  const m = {hired:'b-green',shortlisted:'b-blue',pending:'b-yellow',rejected:'b-red',pending_review:'b-yellow',interviewing:'b-purple'};
-  return `<span class="badge ${m[s?.toLowerCase()]||'b-yellow'}">${s||'null'}</span>`;
+  const m = {hired:'b-green',shortlisted:'b-blue',pending:'b-yellow',rejected:'b-red',interviewing:'b-purple'};
+  const st = (s || 'pending').toLowerCase();
+  return `<span class="badge ${m[st]||'b-yellow'}">${st}</span>`;
 };
 const nullOrVal = v => v ? `<td class="num-val">${v}</td>` : `<td class="null-val">NULL</td>`;
 
-/* ── CLOCK ── */
-setInterval(()=>{ $('top-clock').textContent = new Date().toLocaleTimeString(); },1000);
-$('top-clock').textContent = new Date().toLocaleTimeString();
+function showToastAlert(msg) {
+  const t = $('alert-toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 2600);
+}
 
-/* ── SIDEBAR ── */
-const TABLES = [
-  {name:'students',       rows: ()=>DB.students.length,  view:'students'},
-  {name:'job_postings',   rows: ()=>DB.drives.length,    view:'drives'},
-  {name:'applications',   rows: ()=>APP_ROWS.length,     view:'apps'},
-  {name:'audit_logs',     rows: ()=>AUDIT_ROWS.length,   view:'audit'},
-  {name:'companies',      rows: ()=>DB.stats.companies,  view:'drives'},
-  {name:'departments',    rows: ()=>6,                   view:'dashboard'},
-];
+function resetDatabase() {
+  if (confirm('Reset database to clean seed records?')) {
+    DB.reset();
+    renderAll();
+    showToastAlert('Database reset to initial seed state.');
+  }
+}
+
+// ── SIDEBAR ──
 function buildSidebar(q='') {
   const tree = $('sidebar-tree');
+  const tables = [
+    { name: 'applications',   rows: DB.applications.length, view: 'apps' },
+    { name: 'job_postings',   rows: DB.drives.length,       view: 'drives' },
+    { name: 'students',       rows: DB.students.length,     view: 'students' },
+    { name: 'audit_logs',     rows: DB.audit_logs.length,   view: 'audit' },
+    { name: 'companies',      rows: DB.stats.companies,     view: 'drives' },
+    { name: 'departments',    rows: 6,                      view: 'dashboard' },
+  ];
+
   tree.innerHTML = '<div class="tree-section">Tables (campus_placement_db)</div>';
-  TABLES.filter(t=>t.name.includes(q.toLowerCase())).forEach(t=>{
+  tables.filter(t => t.name.includes(q.toLowerCase())).forEach(t => {
     const d = document.createElement('div');
     d.className = 'tree-item';
-    d.innerHTML = `<svg viewBox="0 0 13 13" fill="none"><rect x="1" y="3" width="11" height="8" rx="1" stroke="currentColor" stroke-width="1"/><line x1="1" y1="6" x2="12" y2="6" stroke="currentColor" stroke-width="1"/></svg>${t.name}<span class="tree-badge">${t.rows()}</span>`;
-    d.onclick=()=>showTab(t.view);
+    d.innerHTML = `<svg viewBox="0 0 13 13" fill="none"><rect x="1" y="3" width="11" height="8" rx="1" stroke="currentColor" stroke-width="1"/><line x1="1" y1="6" x2="12" y2="6" stroke="currentColor" stroke-width="1"/></svg>${t.name}<span class="tree-badge">${t.rows}</span>`;
+    d.onclick = () => showTab(t.view);
     tree.appendChild(d);
   });
-  tree.innerHTML += '<div class="tree-section" style="margin-top:8px">Graph (Neo4j)</div>';
+
+  tree.innerHTML += '<div class="tree-section" style="margin-top:8px">Graph Engine (Neo4j)</div>';
   const g = document.createElement('div');
-  g.className='tree-item';
-  g.innerHTML=`<svg viewBox="0 0 13 13" fill="none"><circle cx="3" cy="6" r="2" stroke="currentColor" stroke-width="1"/><circle cx="10" cy="3" r="2" stroke="currentColor" stroke-width="1"/><circle cx="10" cy="10" r="2" stroke="currentColor" stroke-width="1"/><line x1="5" y1="6" x2="8" y2="3" stroke="currentColor"/><line x1="5" y1="6" x2="8" y2="10" stroke="currentColor"/></svg>graph_queries<span class="tree-badge">8</span>`;
-  g.onclick=()=>showTab('graph');
+  g.className = 'tree-item';
+  g.innerHTML = `<svg viewBox="0 0 13 13" fill="none"><circle cx="3" cy="6" r="2" stroke="currentColor" stroke-width="1"/><circle cx="10" cy="3" r="2" stroke="currentColor" stroke-width="1"/><circle cx="10" cy="10" r="2" stroke="currentColor" stroke-width="1"/><line x1="5" y1="6" x2="8" y2="3" stroke="currentColor"/><line x1="5" y1="6" x2="8" y2="10" stroke="currentColor"/></svg>graph_queries<span class="tree-badge">7</span>`;
+  g.onclick = () => showTab('graph');
   tree.appendChild(g);
 }
-function filterSidebar(v){buildSidebar(v)}
+function filterSidebar(v) { buildSidebar(v); }
 
-/* ── TAB SWITCHING ── */
-const VIEWS = ['dashboard','students','drives','apps','audit','graph','query'];
+// ── TABS ──
+const VIEWS = ['dashboard','apps','drives','students','audit','graph','query'];
 function showTab(name) {
-  VIEWS.forEach(v=>{
-    const el=$(`view-${v}`);
-    if(el) el.style.display='none';
-    const t=$(`tab-${v}`);
-    if(t) t.classList.remove('active');
+  VIEWS.forEach(v => {
+    const el = $(`view-${v}`);
+    if (el) el.style.display = 'none';
+    const t = $(`tab-${v}`);
+    if (t) t.classList.remove('active');
   });
-  const el=$(`view-${name}`);
-  if(el){el.style.display='flex';el.style.flexDirection='column';}
-  const t=$(`tab-${name}`);
-  if(t)t.classList.add('active');
-  if(name==='dashboard') $(`view-${name}`).style.display='block';
+  const target = $(`view-${name}`);
+  if (target) {
+    target.style.display = name === 'dashboard' ? 'block' : 'flex';
+    target.style.flexDirection = 'column';
+  }
+  const tabBtn = $(`tab-${name}`);
+  if (tabBtn) tabBtn.classList.add('active');
 }
 
-/* ── DASHBOARD ── */
+// ── DASHBOARD ──
 function renderDashboard() {
-  $('m-students').textContent = DB.students.length;
+  $('m-apps').textContent     = DB.applications.length;
   $('m-drives').textContent   = DB.drives.length;
   $('m-placed').textContent   = DB.stats.placed;
-  $('m-companies').textContent= DB.stats.companies;
+  $('m-audits').textContent   = DB.audit_logs.length;
   $('m-avgctc').textContent   = DB.stats.avgCtc;
   $('m-highctc').textContent  = DB.stats.highestCtc;
 
   const depts = [
-    {d:'CSE',pct:94},  {d:'IT',pct:88},  {d:'ECE',pct:82},
-    {d:'EEE',pct:74},  {d:'ME',pct:71},  {d:'CE',pct:68},
+    {d:'CSE',pct:94}, {d:'IT',pct:88}, {d:'ECE',pct:82},
+    {d:'EEE',pct:74}, {d:'ME',pct:71}, {d:'CE',pct:68},
   ];
-  $('dept-bars').innerHTML = depts.map(r=>`
+  $('dept-bars').innerHTML = depts.map(r => `
     <div class="bar-row">
       <span class="bar-label">${r.d}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:0%" data-pct="${r.pct}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${r.pct}%"></div></div>
       <span class="bar-val">${r.pct}%</span>
     </div>`).join('');
 
@@ -510,72 +510,96 @@ function renderDashboard() {
     {l:'<₹8L',v:80},{l:'₹8-12L',v:113},{l:'₹12-16L',v:90},{l:'₹16-20L',v:83},
     {l:'₹20-28L',v:73},{l:'₹28-35L',v:36},{l:'>₹35L',v:17},
   ];
-  const maxC = Math.max(...ctcBands.map(b=>b.v));
-  $('ctc-bars').innerHTML = ctcBands.map(r=>`
+  const maxC = Math.max(...ctcBands.map(b => b.v));
+  $('ctc-bars').innerHTML = ctcBands.map(r => `
     <div class="bar-row">
       <span class="bar-label">${r.l}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--purple)" data-pct="${Math.round(r.v/maxC*100)}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(r.v/maxC*100)}%;background:var(--purple)"></div></div>
       <span class="bar-val">${r.v}</span>
     </div>`).join('');
 
-  // Animate bars after paint
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    document.querySelectorAll('.bar-fill').forEach(b=>b.style.width=b.dataset.pct+'%');
-  }));
-
-  $('dash-audit').innerHTML = AUDIT_ROWS.slice(0,8).map(r=>`
+  $('dash-audit').innerHTML = DB.audit_logs.slice(0, 8).map(r => `
     <tr>
-      <td class="pk-val">${r.id}</td>
-      <td>${r.ts}</td>
-      <td>${r.app}</td>
-      <td>${r.stu}</td>
-      <td class="null-val">${r.old}</td>
-      <td>${statusBadge(r.nw)}</td>
-      <td>${r.user}</td>
+      <td class="pk-val">${r.log_id}</td>
+      <td style="color:var(--text3)">${r.log_timestamp}</td>
+      <td class="pk-val">${r.app_id}</td>
+      <td style="font-family:var(--font);color:var(--text)">${r.student_name}</td>
+      <td><span class="badge ${r.action_type==='INSERT'?'b-green':'b-yellow'}">${r.action_type}</span></td>
+      <td class="null-val">${r.old_status}</td>
+      <td>${statusBadge(r.new_status)}</td>
+      <td style="color:var(--text3)">${r.changed_by}</td>
     </tr>`).join('');
 }
 
-/* ── STUDENTS ── */
-let stuFilter='', stuStatus='';
-const APP_ROWS = [];  // populated from drives data
+// ── APPLICATIONS (LIVE DATA & ACTIONS) ──
+let appQuery = '', appStatusFilter = '';
 
-function renderStudents() {
-  let list = DB.students;
-  if(stuStatus) list = list.filter(s=>s.status===stuStatus);
-  if(stuFilter) {
-    const q=stuFilter.toLowerCase();
-    list = list.filter(s=>
-      s.name.toLowerCase().includes(q)||s.roll.toLowerCase().includes(q)||
-      s.dept.toLowerCase().includes(q)||s.skills.some(sk=>sk.toLowerCase().includes(q))
+function renderApps() {
+  let list = DB.applications;
+  if (appStatusFilter) {
+    list = list.filter(a => (a.status || '').toLowerCase() === appStatusFilter.toLowerCase());
+  }
+  if (appQuery) {
+    const q = appQuery.toLowerCase();
+    list = list.filter(a =>
+      (a.student_name || '').toLowerCase().includes(q) ||
+      (a.roll_no || '').toLowerCase().includes(q) ||
+      (a.company || '').toLowerCase().includes(q) ||
+      (a.role || '').toLowerCase().includes(q) ||
+      (a.app_id || '').toLowerCase().includes(q)
     );
   }
-  $('stu-count').textContent=`${list.length} rows`;
-  $('sb-students').textContent=`${list.length} rows`;
-  $('tbody-students').innerHTML = list.map((s,i)=>`
-    <tr>
-      <td class="num-val">${i+1}</td>
-      <td class="pk-val">${s.roll}</td>
-      <td style="font-family:var(--font);font-weight:500;color:var(--text)">${s.name}</td>
-      <td>${s.dept}</td>
-      <td class="num-val">${s.cgpa}</td>
-      <td>${s.skills.map(sk=>`<span class="badge b-blue" style="margin:1px">${sk}</span>`).join('')}</td>
-      <td>${statusBadge(s.status)}</td>
-      ${nullOrVal(s.offer)}
-      <td>${s.company||'<span class="null-val">NULL</span>'}</td>
+
+  $('apps-count').textContent = `${list.length} rows`;
+  $('sb-apps').textContent = `${list.length} rows`;
+
+  $('tbody-apps').innerHTML = list.map((a, i) => `
+    <tr class="${i === 0 ? 'highlight-new' : ''}">
+      <td class="pk-val">${a.app_id}</td>
+      <td class="pk-val">${a.roll_no}</td>
+      <td style="font-family:var(--font);color:var(--text);font-weight:500">${a.student_name}</td>
+      <td><span class="badge b-blue">${a.dept || 'CSE'}</span></td>
+      <td style="color:var(--text3)">${a.job_id}</td>
+      <td style="font-family:var(--font);color:var(--text);font-weight:500">${a.company}</td>
+      <td>${a.role}</td>
+      <td style="color:var(--text3)">${a.applied_on}</td>
+      <td>${statusBadge(a.status)}</td>
+      ${nullOrVal(a.package_offered)}
+      <td>
+        <div class="action-btn-grp">
+          <button class="action-btn shortlist" onclick="changeAppStatus('${a.app_id}','shortlisted')">Shortlist</button>
+          <button class="action-btn hire" onclick="changeAppStatus('${a.app_id}','hired')">Hire</button>
+          <button class="action-btn reject" onclick="changeAppStatus('${a.app_id}','rejected')">Reject</button>
+        </div>
+      </td>
     </tr>`).join('');
 }
-function filterStudents(q){stuFilter=q;renderStudents();}
-function filterStudentStatus(v){stuStatus=v;renderStudents();}
 
-/* ── DRIVES ── */
-let drvFilter='', drvType='';
+function filterApps(q) { appQuery = q; renderApps(); }
+function filterAppStatus(v) { appStatusFilter = v; renderApps(); }
+
+function changeAppStatus(appId, newStatus) {
+  const res = DB.updateApplicationStatus(appId, newStatus, 'db_admin');
+  if (res.success) {
+    renderAll();
+    showToastAlert(`✓ Application ${appId} updated to ${newStatus.toUpperCase()}`);
+  }
+}
+
+// ── JOB POSTINGS (DRIVES) ──
+let drvQuery = '', drvTypeFilter = '';
 function renderDrives() {
   let list = DB.drives;
-  if(drvType) list=list.filter(d=>d.type===drvType);
-  if(drvFilter){const q=drvFilter.toLowerCase();list=list.filter(d=>d.company.toLowerCase().includes(q)||d.role.toLowerCase().includes(q)||d.type.toLowerCase().includes(q));}
-  $('drv-count').textContent=`${list.length} rows`;
-  $('sb-drives').textContent=`${list.length} rows`;
-  $('tbody-drives').innerHTML = list.map((d,i)=>`
+  if (drvTypeFilter) list = list.filter(d => d.type === drvTypeFilter);
+  if (drvQuery) {
+    const q = drvQuery.toLowerCase();
+    list = list.filter(d => d.company.toLowerCase().includes(q) || d.role.toLowerCase().includes(q));
+  }
+
+  $('drv-count').textContent = `${list.length} rows`;
+  $('sb-drives').textContent = `${list.length} rows`;
+
+  $('tbody-drives').innerHTML = list.map(d => `
     <tr>
       <td class="pk-val">JOB${String(d.id).padStart(3,'0')}</td>
       <td style="font-family:var(--font);font-weight:500;color:var(--text)">${d.company}</td>
@@ -583,109 +607,183 @@ function renderDrives() {
       <td class="num-val">${d.ctc}</td>
       <td><span class="badge ${d.type==='Internship'?'b-purple':'b-blue'}">${d.type}</span></td>
       <td class="num-val">${d.minCgpa}</td>
-      <td>${d.depts.map(dep=>`<span class="badge b-blue" style="margin:1px">${dep}</span>`).join('')}</td>
+      <td>${(d.depts||[]).map(dep=>`<span class="badge b-blue" style="margin:1px">${dep}</span>`).join('')}</td>
       <td>${d.deadline}</td>
-      <td class="num-val">${d.applicants}</td>
+      <td class="num-val" style="color:var(--green);font-weight:600">${d.applicants || 0}</td>
       <td class="num-val">${d.capacity}</td>
+      <td><span class="badge b-green">OPEN</span></td>
     </tr>`).join('');
 }
-function filterDrives(q){drvFilter=q;renderDrives();}
-function filterDriveType(v){drvType=v;renderDrives();}
+function filterDrives(q) { drvQuery = q; renderDrives(); }
+function filterDriveType(v) { drvTypeFilter = v; renderDrives(); }
 
-/* ── APPLICATIONS ── */
-function buildApps(){
-  DB.students.forEach(s=>{
-    if(s.company)APP_ROWS.push({app:`APP${String(APP_ROWS.length+1).padStart(3,'0')}`,roll:s.roll,stu:s.name,job:`JOB${String(APP_ROWS.length+1).padStart(3,'0')}`,co:s.company,role:'—',applied:'2026-10-'+String(15+APP_ROWS.length).padStart(2,'0'),status:s.status,pkg:s.offer||null});
-  });
-}
-let appFilter='';
-function renderApps(q=''){
-  let list=APP_ROWS;
-  if(q)list=list.filter(r=>r.stu.toLowerCase().includes(q)||r.co.toLowerCase().includes(q)||r.roll.toLowerCase().includes(q));
-  $('apps-count').textContent=`${list.length} rows`;
-  $('sb-apps').textContent=`${list.length} rows`;
-  $('tbody-apps').innerHTML=list.map(r=>`
-    <tr>
-      <td class="pk-val">${r.app}</td>
-      <td class="pk-val">${r.roll}</td>
-      <td style="font-family:var(--font);color:var(--text)">${r.stu}</td>
-      <td>${r.job}</td>
-      <td style="font-family:var(--font);color:var(--text)">${r.co}</td>
-      <td>${r.role}</td>
-      <td>${r.applied}</td>
-      <td>${statusBadge(r.status)}</td>
-      ${nullOrVal(r.pkg)}
-    </tr>`).join('');
-}
-function filterApps(q){renderApps(q);}
-
-/* ── AUDIT ── */
-function renderAudit() {
-  $('audit-count').textContent=`${AUDIT_ROWS.length} rows`;
-  $('tbody-audit').innerHTML = AUDIT_ROWS.map(r=>`
-    <tr>
-      <td class="pk-val">${r.id}</td>
-      <td style="color:var(--text3)">${r.ts}</td>
-      <td>${r.app}</td>
-      <td style="font-family:var(--font);color:var(--text)">${r.stu}</td>
-      <td><span class="badge ${r.act==='INSERT'?'b-green':'b-yellow'}">${r.act}</span></td>
-      <td class="null-val">${r.old}</td>
-      <td>${statusBadge(r.nw)}</td>
-      <td style="color:var(--text3)">${r.user}</td>
-    </tr>`).join('');
-}
-
-/* ── GRAPH QUERIES ── */
-let currentGQ='q1';
-function showGraphQ(q) {
-  currentGQ=q;
-  Object.keys(GRAPH_DATA).forEach(k=>$(`gq-${k}`).classList.remove('active'));
-  // highlight active btn
-  const data=GRAPH_DATA[q];
-  $('cypher-box').textContent=data.cypher;
-  $('graph-thead').innerHTML=`<tr>${data.headers.map(h=>`<th>${h}</th>`).join('')}</tr>`;
-  $('graph-tbody').innerHTML=data.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('');
-  $('sb-graph').textContent=`${data.rows.length} rows`;
-}
-
-/* ── SQL CONSOLE ── */
-const SQL_MOCK = {
-  'select * from students': {h:['roll_no','name','dept','cgpa','status'], r: ()=>DB.students.map(s=>[s.roll,s.name,s.dept,s.cgpa,s.status])},
-  'select * from job_postings': {h:['job_id','company','role','ctc','type','deadline'], r:()=>DB.drives.map(d=>[`JOB${d.id}`,d.company,d.role,d.ctc,d.type,d.deadline])},
-  'select * from audit_logs':  {h:['log_id','timestamp','app_id','student','action','new_status'], r:()=>AUDIT_ROWS.map(a=>[a.id,a.ts,a.app,a.stu,a.act,a.nw])},
-};
-
-function runQuery() {
-  const raw=$('sql-area').value.trim().toLowerCase().replace(/;$/,'').replace(/\s+/g,' ');
-  const t0=Date.now();
-  const match=SQL_MOCK[raw];
-  const elapsed=Date.now()-t0+Math.floor(Math.random()*12+2);
-  $('query-time').textContent=`${elapsed} ms`;
-  if(match){
-    const rows=match.r();
-    $('qr-thead').innerHTML=`<tr>${match.h.map(h=>`<th>${h}</th>`).join('')}</tr>`;
-    $('qr-tbody').innerHTML=rows.map(r=>`<tr>${r.map(c=>`<td>${c??'<span class="null-val">NULL</span>'}</td>`).join('')}</tr>`).join('');
-    $('qr-msg').style.display='none';
-    $('sb-query').textContent=`${rows.length} rows • ${elapsed} ms`;
-  } else {
-    $('qr-thead').innerHTML='';
-    $('qr-tbody').innerHTML='';
-    $('qr-msg').style.display='block';
-    $('qr-msg').innerHTML=`<span style="color:var(--yellow)">⚠</span> Query executed in ${elapsed}ms. (Mock: live queries on <kbd>SELECT * FROM students</kbd>, <kbd>SELECT * FROM job_postings</kbd>, <kbd>SELECT * FROM audit_logs</kbd>)`;
-    $('sb-query').textContent=`${elapsed} ms`;
+// ── STUDENTS ──
+let stuQuery = '', stuStatusFilter = '';
+function renderStudents() {
+  let list = DB.students;
+  if (stuStatusFilter) list = list.filter(s => (s.status||'').toLowerCase() === stuStatusFilter.toLowerCase());
+  if (stuQuery) {
+    const q = stuQuery.toLowerCase();
+    list = list.filter(s =>
+      s.name.toLowerCase().includes(q) || s.roll.toLowerCase().includes(q) ||
+      s.dept.toLowerCase().includes(q) || s.skills.some(sk => sk.toLowerCase().includes(q))
+    );
   }
-}
-function clearQuery(){$('sql-area').value='';$('qr-thead').innerHTML='';$('qr-tbody').innerHTML='';$('qr-msg').textContent='No query run yet.';$('qr-msg').style.display='block';}
-document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter'){e.preventDefault();runQuery();}});
 
-/* ── INIT ── */
-buildApps();
-buildSidebar();
-renderDashboard();
-renderStudents();
-renderDrives();
-renderApps();
-renderAudit();
+  $('stu-count').textContent = `${list.length} rows`;
+  $('sb-students').textContent = `${list.length} rows`;
+
+  $('tbody-students').innerHTML = list.map((s, i) => `
+    <tr>
+      <td class="num-val">${i + 1}</td>
+      <td class="pk-val">${s.roll}</td>
+      <td style="font-family:var(--font);font-weight:500;color:var(--text)">${s.name}</td>
+      <td>${s.dept}</td>
+      <td class="num-val">${s.cgpa}</td>
+      <td>${s.skills.map(sk => `<span class="badge b-blue" style="margin:1px">${sk}</span>`).join('')}</td>
+      <td>${statusBadge(s.status)}</td>
+      ${nullOrVal(s.offer)}
+      <td>${s.company || '<span class="null-val">NULL</span>'}</td>
+    </tr>`).join('');
+}
+function filterStudents(q) { stuQuery = q; renderStudents(); }
+function filterStudentStatus(v) { stuStatusFilter = v; renderStudents(); }
+
+// ── AUDIT LOGS (REAL TRIGGERS) ──
+function renderAudit() {
+  $('audit-count').textContent = `${DB.audit_logs.length} rows`;
+  $('sb-audit').textContent = `${DB.audit_logs.length} rows`;
+
+  $('tbody-audit').innerHTML = DB.audit_logs.map(r => `
+    <tr>
+      <td class="pk-val">${r.log_id}</td>
+      <td style="color:var(--text3)">${r.log_timestamp}</td>
+      <td class="pk-val">${r.app_id}</td>
+      <td style="font-family:var(--font);color:var(--text)">${r.student_name}</td>
+      <td><span class="badge ${r.action_type==='INSERT'?'b-green':'b-yellow'}">${r.action_type}</span></td>
+      <td class="null-val">${r.old_status}</td>
+      <td>${statusBadge(r.new_status)}</td>
+      <td style="color:var(--text3)">${r.changed_by}</td>
+    </tr>`).join('');
+}
+
+// ── GRAPH QUERIES ──
+let currentGQ = 'q1';
+function showGraphQ(q) {
+  currentGQ = q;
+  Object.keys(GRAPH_DATA).forEach(k => {
+    const btn = $(`gq-${k}`);
+    if (btn) btn.classList.remove('active');
+  });
+  const activeBtn = $(`gq-${q}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const data = GRAPH_DATA[q];
+  $('cypher-box').textContent = data.cypher;
+  $('graph-thead').innerHTML = `<tr>${data.headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+  $('graph-tbody').innerHTML = data.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+  $('sb-graph').textContent = `${data.rows.length} rows`;
+}
+
+// ── SQL CONSOLE ──
+function runQuery() {
+  const raw = $('sql-area').value.trim().toLowerCase().replace(/;$/, '').replace(/\s+/g, ' ');
+  const t0 = Date.now();
+  const elapsed = Math.floor(Math.random() * 10 + 2);
+  $('query-time').textContent = `${elapsed} ms`;
+
+  let headers = [], rows = [];
+
+  if (raw.includes('from applications')) {
+    headers = ['app_id', 'roll_no', 'student_name', 'company', 'role', 'status', 'applied_on'];
+    rows = DB.applications.map(a => [a.app_id, a.roll_no, a.student_name, a.company, a.role, a.status, a.applied_on]);
+  } else if (raw.includes('from audit_logs')) {
+    headers = ['log_id', 'log_timestamp', 'app_id', 'student_name', 'action_type', 'new_status', 'changed_by'];
+    rows = DB.audit_logs.map(l => [l.log_id, l.log_timestamp, l.app_id, l.student_name, l.action_type, l.new_status, l.changed_by]);
+  } else if (raw.includes('from students')) {
+    headers = ['roll_no', 'name', 'dept', 'cgpa', 'status', 'company'];
+    rows = DB.students.map(s => [s.roll, s.name, s.dept, s.cgpa, s.status, s.company || 'NULL']);
+  } else if (raw.includes('from job_postings') || raw.includes('from drives')) {
+    headers = ['job_id', 'company', 'role', 'ctc', 'type', 'applicants', 'deadline'];
+    rows = DB.drives.map(d => [`JOB${String(d.id).padStart(3,'0')}`, d.company, d.role, d.ctc, d.type, d.applicants, d.deadline]);
+  } else {
+    // Default fallback mock
+    $('qr-thead').innerHTML = '';
+    $('qr-tbody').innerHTML = '';
+    $('qr-msg').style.display = 'block';
+    $('qr-msg').innerHTML = `<span style="color:var(--yellow)">⚠</span> Query executed in ${elapsed}ms. (Try queries on <kbd>applications</kbd>, <kbd>audit_logs</kbd>, <kbd>students</kbd>, <kbd>job_postings</kbd>)`;
+    $('sb-query').textContent = `${elapsed} ms`;
+    return;
+  }
+
+  $('qr-thead').innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+  $('qr-tbody').innerHTML = rows.map(r => `<tr>${r.map(c => `<td>${c ?? '<span class="null-val">NULL</span>'}</td>`).join('')}</tr>`).join('');
+  $('qr-msg').style.display = 'none';
+  $('sb-query').textContent = `${rows.length} rows • ${elapsed} ms`;
+}
+
+function clearQuery() {
+  $('sql-area').value = '';
+  $('qr-thead').innerHTML = '';
+  $('qr-tbody').innerHTML = '';
+  $('qr-msg').textContent = 'No query run yet.';
+  $('qr-msg').style.display = 'block';
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runQuery();
+  }
+});
+
+// ── MASTER RENDER ALL VIEWS ──
+function renderAll() {
+  buildSidebar();
+  renderDashboard();
+  renderApps();
+  renderDrives();
+  renderStudents();
+  renderAudit();
+}
+
+// ── REAL-TIME CROSS-TAB SYNC ──
+window.addEventListener('cpp-db-change', (e) => {
+  renderAll();
+  showToastAlert('⚡ Live database sync event received!');
+});
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'CPP_DATABASE') {
+    DB.load();
+    renderAll();
+    showToastAlert('⚡ External change committed: Re-synced tables');
+  }
+});
+
+// Polling interval (every 600ms) to guarantee cross-window synchronization
+let lastCheckedTs = DB.lastUpdated;
+setInterval(() => {
+  try {
+    const raw = localStorage.getItem('CPP_DATABASE');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.lastUpdated && parsed.lastUpdated !== lastCheckedTs) {
+        lastCheckedTs = parsed.lastUpdated;
+        DB.load();
+        renderAll();
+        showToastAlert('⚡ New transaction committed to database!');
+      }
+    }
+  } catch(e) {}
+}, 600);
+
+// Clock
+setInterval(() => { $('top-clock').textContent = new Date().toLocaleTimeString(); }, 1000);
+$('top-clock').textContent = new Date().toLocaleTimeString();
+
+// Init
+renderAll();
 showGraphQ('q1');
 showTab('dashboard');
 </script>

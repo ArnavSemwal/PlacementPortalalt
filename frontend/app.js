@@ -48,9 +48,15 @@ function statusBadge(s) {
 // ── Drive card HTML ──
 function driveCardHTML(d, full = false) {
   const pct = Math.round((d.applicants / (d.capacity * 8)) * 100);
+  const activeRoll = localStorage.getItem('cpp-student-roll') || 'CS21001';
+  const applied = DB.hasStudentApplied ? DB.hasStudentApplied(activeRoll, d.id) : null;
+  const tagHtml = applied
+    ? `<span class="drive-tag open" style="background:#0a1a0a;color:#28a745;border:1px solid #28a745;font-weight:700">✓ APPLIED (${applied.app_id})</span>`
+    : `<span class="drive-tag open">● OPEN</span>`;
+
   return `
     <div class="drive-card" onclick="openDriveModal(${d.id})">
-      <span class="drive-tag open">● OPEN</span>
+      ${tagHtml}
       <div>
         <div class="drive-company">${d.company}</div>
         <div class="drive-role">${d.role}</div>
@@ -91,14 +97,27 @@ function openDriveModal(id) {
   if (!d) return;
   const role = currentRole();
   const skillsHtml = d.skills.map(s => `<span class="skill-chip">${s}</span>`).join('');
+  const activeRoll = localStorage.getItem('cpp-student-roll') || 'CS21001';
+  const applied = DB.hasStudentApplied ? DB.hasStudentApplied(activeRoll, d.id) : null;
 
   let actionBtn = '';
   if (role === 'student') {
-    actionBtn = `<button class="btn-primary" onclick="applyToDrive(${d.id})">Apply Now →</button>`;
+    if (applied) {
+      actionBtn = `
+        <div style="border-top:1px solid #111;padding-top:16px;margin-top:16px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#28a745">✓ ALREADY APPLIED [${applied.app_id}]</div>
+            <div style="font-size:11px;color:#777;margin-top:2px">Status: <strong style="text-transform:uppercase">${applied.status}</strong> · Applied: ${applied.applied_on}</div>
+          </div>
+          <button class="btn-secondary" onclick="applyToDrive(${d.id})">Apply Again</button>
+        </div>`;
+    } else {
+      actionBtn = `<button class="btn-primary" onclick="applyToDrive(${d.id})">Apply Now →</button>`;
+    }
   } else if (role === 'recruiter') {
-    actionBtn = `<button class="btn-primary" onclick="showToast('Opening applicant list…')">View Applicants →</button>`;
+    actionBtn = `<button class="btn-primary" onclick="window.location.href='db.html'">View Applicants in DB →</button>`;
   } else {
-    actionBtn = `<button class="btn-primary" onclick="showToast('Drive statistics loaded.')">Drive Analytics →</button>`;
+    actionBtn = `<button class="btn-primary" onclick="window.location.href='db.html'">Drive Analytics in DB →</button>`;
   }
 
   const html = `
@@ -145,8 +164,25 @@ function openDriveModal(id) {
 
 function applyToDrive(id) {
   const d = DB.drives.find(x => x.id === id);
+  if (!d) return;
+  const activeRoll = localStorage.getItem('cpp-student-roll') || 'CS21001';
+  const stu = DB.students.find(s => s.roll === activeRoll) || DB.students[0];
+
+  const res = DB.applyForJob({
+    jobId: id,
+    rollNo: stu.roll,
+    studentName: stu.name,
+    dept: stu.dept,
+    cgpa: stu.cgpa
+  });
+
   closeModal('drive-modal');
-  showToast(`Application submitted for ${d.role} at ${d.company}!`);
+  showToast(`✓ Application [${res.application.app_id}] submitted for ${d.role} at ${d.company}! Audit Log: ${res.auditLog.log_id}`);
+
+  // Re-render UI on current page
+  if ($('drives-full-grid')) renderDrivesPage();
+  if ($('drives-container')) $('drives-container').innerHTML = DB.drives.slice(0,4).map(x => driveCardHTML(x)).join('');
+  if ($('dash-kpi-row')) renderDashboard();
 }
 
 // ── Student Modal ──
@@ -342,3 +378,11 @@ function doSearch() {
 function renderAnalyticsPage() {
   // Dept grid already in HTML, animated via CSS
 }
+
+// ── REAL-TIME SYNC WITH DATABASE BACKEND ──
+window.addEventListener('cpp-db-change', () => {
+  if ($('drives-full-grid')) renderDrivesPage();
+  if ($('drives-container')) $('drives-container').innerHTML = DB.drives.slice(0,4).map(x => driveCardHTML(x)).join('');
+  if ($('students-full-tbody')) renderStudentsPage();
+  if ($('dash-kpi-row')) renderDashboard();
+});
