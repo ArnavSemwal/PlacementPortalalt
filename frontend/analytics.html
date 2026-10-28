@@ -24,7 +24,7 @@
       <a href="drives.html"    class="nav-link">Drives</a>
       <a href="students.html"  class="nav-link">Students</a>
       <a href="analytics.html" class="nav-link active">Analytics</a>
-      <a href="system.html"    class="nav-link">DA2/DA3 Engine</a>
+      <a href="system.html"    class="nav-link">Engine</a>
       <a href="db.html"        class="nav-link" id="nav-db" style="color:#58a6ff;font-weight:600">DB Backend</a>
     </div>
     <div class="nav-right">
@@ -226,13 +226,14 @@
       const chart  = $('ctc-chart');
       chart.innerHTML = ctcData.map(d => {
         const total = d.cse + d.other;
-        const h = Math.round((total / maxVal) * 180);
+        const hOther = Math.max(6, Math.round((d.other / maxVal) * 180));
+        const hCse = Math.max(6, Math.round((d.cse / maxVal) * 180));
         return `
           <div class="bar-chart-col">
             <div class="bar-chart-val">${total}</div>
-            <div style="display:flex;align-items:flex-end;gap:2px;height:180px">
-              <div class="bar-chart-bar" style="height:${Math.round((d.other/maxVal)*180)}px;flex:1"></div>
-              <div class="bar-chart-bar red" style="height:${Math.round((d.cse/maxVal)*180)}px;flex:1"></div>
+            <div class="bar-chart-bars-wrap" style="display:flex;align-items:flex-end;gap:4px;height:180px;width:100%;max-width:56px;">
+              <div class="bar-chart-bar" style="height:${hOther}px;flex:1;min-width:18px;background:var(--black);" title="Other Depts: ${d.other}"></div>
+              <div class="bar-chart-bar red" style="height:${hCse}px;flex:1;min-width:18px;background:var(--red);" title="CSE: ${d.cse}"></div>
             </div>
             <div class="bar-chart-label">${d.range}</div>
           </div>`;
