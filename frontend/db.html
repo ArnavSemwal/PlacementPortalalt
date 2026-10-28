@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CPP_DB :: root@placement-server:~$</title>
+<meta name="description" content="Campus Placement Portal — Cybercore Database Terminal Interface"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700;800&family=VT323&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   CYBERCORE DATABASE TERMINAL
+   #050505 | #39FF14 | #FF00E5 | #00F0FF
+═══════════════════════════════════════════ */
+:root {
+  --bg:     #050505;
+  --green:  #39FF14;
+  --green2: #00FF41;
+  --pink:   #FF00E5;
+  --cyan:   #00F0FF;
+  --dim:    #0a1a0a;
+  --border: #1a3a1a;
+  --glow:   0 0 8px #39FF14, 0 0 20px #39FF1430;
+  --font:   'JetBrains Mono', monospace;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:14px; scroll-behavior:smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--green);
+  overflow-x: hidden;
+  min-height: 100vh;
+  cursor: crosshair;
+}
+
+/* ── SCANLINES OVERLAY ── */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.18) 2px,
+    rgba(0,0,0,0.18) 4px
+  );
+  pointer-events:none;
+  z-index:9999;
+}
+
+/* ── DIM GREEN GRID ── */
+body::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(57,255,20,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57,255,20,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── BINARY RAIN CANVAS ── */
+#rain-canvas {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  opacity:0.06;
+  z-index:1;
+  pointer-events:none;
+}
+
+/* ── MAIN LAYOUT ── */
+.terminal-layout {
+  position:relative;
+  z-index:2;
+  max-width:1400px;
+  margin:0 auto;
+  padding:20px;
+}
+
+/* ── TOPBAR / STATUSBAR ── */
+.status-bar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#030803;
+  border:1px solid var(--border);
+  border-bottom:2px solid var(--green);
+  padding:8px 20px;
+  margin-bottom:20px;
+  font-size:11px;
+  letter-spacing:0.05em;
+}
+.status-bar .status-left { display:flex; gap:24px; align-items:center; }
+.status-bar .status-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--green);
+  box-shadow: var(--glow);
+  animation: blink 1.2s infinite;
+}
+.status-bar .status-dot.red  { background:#ff3030; box-shadow:0 0 8px #ff3030; }
+.status-bar .status-dot.yellow { background:#ffcc00; box-shadow:0 0 8px #ffcc00; }
+.status-right { color:#3a7a3a; letter-spacing:0.08em; }
+
+/* ── TERMINAL WINDOW ── */
+.term-window {
+  background:#020902;
+  border:1px solid var(--border);
+  margin-bottom:20px;
+  position:relative;
+  transition: border-color 0.2s;
+}
+.term-window:hover { border-color: var(--green); }
+
+.term-titlebar {
+  background:#0a1a0a;
+  border-bottom:1px solid var(--border);
+  padding:8px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:11px;
+  letter-spacing:0.06em;
+}
+.term-titlebar .term-dots { display:flex; gap:6px; }
+.term-dot {
+  width:10px; height:10px; border-radius:50%;
+}
+.term-dot.r { background:#ff5f57; }
+.term-dot.y { background:#febc2e; }
+.term-dot.g { background:#28c840; box-shadow:0 0 6px #28c840; }
+.term-prompt { color: var(--cyan); }
+.term-pid { color:#3a7a3a; font-size:10px; }
+
+.term-body { padding:20px; }
+
+/* ── GLITCH HEADLINE ── */
+.glitch-headline {
+  font-family:'VT323', monospace;
+  font-size:clamp(36px,6vw,72px);
+  font-weight:400;
+  color: var(--green);
+  line-height:1;
+  letter-spacing:0.04em;
+  position:relative;
+  display:inline-block;
+  animation: glitch-main 4s infinite;
+}
+.glitch-headline::before {
+  content: attr(data-text);
+  position:absolute; inset:0;
+  color: var(--pink);
+  animation: glitch-r 4s infinite;
+  clip-path: polygon(0 0,100% 0,100% 33%,0 33%);
+}
+.glitch-headline::after {
+  content: attr(data-text);
+  position:absolute; inset:0;
+  color: var(--cyan);
+  animation: glitch-l 4s 0.5s infinite;
+  clip-path: polygon(0 66%,100% 66%,100% 100%,0 100%);
+}
+
+@keyframes glitch-main {
+  0%,94%,100% { transform:none; }
+  95% { transform:skewX(-2deg) translateX(2px); }
+  97% { transform:skewX(2deg) translateX(-2px); }
+}
+@keyframes glitch-r {
+  0%,94%,100% { transform:translateX(0); opacity:0; }
+  95%,96% { transform:translateX(3px); opacity:0.8; }
+}
+@keyframes glitch-l {
+  0%,94%,100% { transform:translateX(0); opacity:0; }
+  95%,96% { transform:translateX(-3px); opacity:0.8; }
+}
+
+/* ── ASCII ART ── */
+.ascii-art {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  line-height:1.2;
+  color: var(--green);
+  white-space:pre;
+  text-shadow:0 0 6px var(--green);
+  letter-spacing:0.05em;
+}
+
+/* ── BLINKING CURSOR ── */
+.cursor { display:inline-block; width:8px; height:14px; background:var(--green); animation:blink 0.8s step-end infinite; vertical-align:middle; margin-left:2px; }
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+
+/* ── LOADING BAR ── */
+.load-bar-outer {
+  background:#020902;
+  border:1px solid var(--green);
+  height:18px;
+  width:100%;
+  margin:8px 0;
+  position:relative;
+  overflow:hidden;
+}
+.load-bar-inner {
+  height:100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--green) 0px,
+    var(--green) 16px,
+    transparent 16px,
+    transparent 20px
+  );
+  box-shadow: 0 0 12px var(--green);
+  transition:width 1s ease;
+  position:relative;
+}
+.load-bar-inner::after {
+  content:'';
+  position:absolute;
+  right:0; top:0; bottom:0;
+  width:20px;
+  background: linear-gradient(90deg,transparent,white);
+  opacity:0.3;
+  animation: scan 1.5s infinite;
+}
+@keyframes scan { from{right:100%} to{right:-20px} }
+.load-label { font-size:10px; color:#3a7a3a; letter-spacing:0.08em; }
+
+/* ── TABLE ── */
+.db-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:11.5px;
+  letter-spacing:0.02em;
+}
+.db-table thead tr {
+  border-bottom:1px solid var(--green);
+  color: var(--cyan);
+  text-transform:uppercase;
+  font-size:10px;
+  letter-spacing:0.12em;
+}
+.db-table th { padding:8px 12px; text-align:left; white-space:nowrap; }
+.db-table td { padding:7px 12px; border-bottom:1px solid #0f250f; color:#7fff7f; vertical-align:middle; }
+.db-table tbody tr { transition:background 0.1s; cursor:pointer; }
+.db-table tbody tr:hover { background:#0a1f0a; }
+.db-table tbody tr:hover td { color:var(--green); text-shadow:0 0 6px var(--green); }
+
+/* ── BADGES ── */
+.badge {
+  display:inline-block;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  padding:2px 8px;
+  border:1px solid;
+}
+.badge-green  { border-color:var(--green); color:var(--green); }
+.badge-cyan   { border-color:var(--cyan); color:var(--cyan); }
+.badge-pink   { border-color:var(--pink); color:var(--pink); }
+.badge-yellow { border-color:#ffcc00; color:#ffcc00; }
+.badge-red    { border-color:#ff3030; color:#ff3030; }
+
+/* ── STAT BOX ── */
+.stat-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:1px; }
+.stat-box {
+  background:#020902;
+  border:1px solid var(--border);
+  padding:16px;
+  text-align:center;
+  transition:all 0.2s;
+}
+.stat-box:hover {
+  border-color:var(--green);
+  background:#0a1a0a;
+}
+.stat-val {
+  font-family:'VT323',monospace;
+  font-size:42px;
+  color:var(--green);
+  text-shadow:var(--glow);
+  line-height:1;
+  display:block;
+}
+.stat-label {
+  font-size:9px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:#3a7a3a;
+  margin-top:4px;
+  display:block;
+}
+
+/* ── TWO-COL GRID ── */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+
+/* ── CMD LINE ── */
+.cmd-line { display:flex; align-items:center; gap:8px; margin:6px 0; }
+.cmd-ps1 { color:var(--pink); white-space:nowrap; }
+.cmd-text { color:var(--green); flex:1; }
+.cmd-out { color:#3a7a3a; margin-left:24px; font-size:11px; }
+
+/* ── NAV TABS ── */
+.tab-bar {
+  display:flex;
+  border-bottom:1px solid var(--border);
+  margin-bottom:16px;
+}
+.tab-btn {
+  font-family:var(--font);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  padding:8px 20px;
+  background:none;
+  border:none;
+  border-bottom:2px solid transparent;
+  color:#3a7a3a;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.tab-btn:hover { color:var(--green); }
+.tab-btn.active { color:var(--green); border-bottom-color:var(--green); text-shadow:0 0 6px var(--green); }
+
+/* ── WARNING POPUP ── */
+.warn-overlay {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:10000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:fadeIn 0.3s;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.warn-box {
+  background:#020902;
+  border:2px solid var(--pink);
+  max-width:580px;
+  width:90%;
+  box-shadow:0 0 40px #FF00E530;
+  animation:warn-glitch 6s infinite;
+}
+@keyframes warn-glitch {
+  0%,90%,100%{transform:none}
+  91%{transform:translateX(3px)}
+  92%{transform:translateX(-3px)}
+  93%{transform:none}
+}
+.warn-titlebar {
+  background:#1a0a0a;
+  border-bottom:1px solid var(--pink);
+  padding:8px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:10px;
+  letter-spacing:0.1em;
+  color:var(--pink);
+}
+.warn-body { padding:24px; }
+.warn-title {
+  font-family:'VT323',monospace;
+  font-size:28px;
+  color:var(--pink);
+  text-shadow:0 0 12px var(--pink);
+  margin-bottom:12px;
+}
+.warn-text { font-size:11px; color:#7fff7f; line-height:1.7; margin-bottom:20px; }
+.warn-btn {
+  font-family:var(--font);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  padding:10px 24px;
+  background:var(--pink);
+  color:#000;
+  border:none;
+  cursor:pointer;
+  transition:all 0.15s;
+  margin-right:8px;
+}
+.warn-btn:hover { box-shadow:0 0 20px var(--pink); }
+.warn-btn.ghost {
+  background:none;
+  color:var(--pink);
+  border:1px solid var(--pink);
+}
+
+/* ── BACK LINK ── */
+.back-btn {
+  font-family:var(--font);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  text-decoration:none;
+  padding:8px 16px;
+  border:1px solid var(--cyan);
+  transition:all 0.15s;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.back-btn:hover { background:var(--cyan); color:#000; box-shadow:0 0 20px var(--cyan); }
+
+/* ── GLOBE ── */
+#globe-canvas { display:block; margin:0 auto; }
+
+/* ── SEARCH ── */
+.db-search {
+  font-family:var(--font);
+  font-size:12px;
+  background:#020902;
+  border:1px solid var(--border);
+  color:var(--green);
+  padding:8px 16px;
+  width:100%;
+  outline:none;
+  letter-spacing:0.05em;
+  transition:border-color 0.2s;
+}
+.db-search::placeholder { color:#1a4a1a; }
+.db-search:focus { border-color:var(--green); box-shadow:0 0 12px #39FF1420; }
+
+/* ── LIVE INDICATOR ── */
+.live-dot {
+  display:inline-block;
+  width:6px; height:6px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:var(--glow);
+  animation:blink 1s infinite;
+}
+
+/* ── HOVER JITTER ── */
+.jitter:hover {
+  animation: jitter 0.3s infinite;
+}
+@keyframes jitter {
+  0%   { transform: translate(0,0); }
+  25%  { transform: translate(1px,-1px); }
+  50%  { transform: translate(-1px,1px); }
+  75%  { transform: translate(1px,1px); }
+  100% { transform: translate(0,0); }
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:#020902; }
+::-webkit-scrollbar-thumb { background:var(--border); }
+::-webkit-scrollbar-thumb:hover { background:var(--green); }
+
+/* ── NAV TOP BAR ── */
+.cyber-nav {
+  position:sticky; top:0;
+  background:#020902;
+  border-bottom:2px solid var(--green);
+  z-index:500;
+  padding:10px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.cyber-nav-links { display:flex; gap:0; }
+.cyber-nav-link {
+  font-size:10px; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase;
+  color:#3a7a3a; text-decoration:none;
+  padding:8px 16px;
+  border:1px solid transparent;
+  transition:all 0.15s;
+}
+.cyber-nav-link:hover, .cyber-nav-link.active {
+  color:var(--green); border-color:var(--green);
+  text-shadow:0 0 8px var(--green);
+  background:#0a1a0a;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .stat-grid { grid-template-columns:repeat(3,1fr); }
+  .two-col,.three-col { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════ BINARY RAIN ════ -->
+<canvas id="rain-canvas"></canvas>
+
+<!-- ════ WARNING MODAL ════ -->
+<div class="warn-overlay" id="warn-overlay">
+  <div class="warn-box">
+    <div class="warn-titlebar">
+      <span>⚠ SYSTEM_ACCESS_WARNING :: PID:9901</span>
+      <span>SEC_LEVEL:3</span>
+    </div>
+    <div class="warn-body">
+      <div class="warn-title">// ACCESS RESTRICTED //</div>
+      <div class="warn-text">
+        <strong style="color:var(--pink)">UNAUTHORIZED DATABASE ACCESS DETECTED.</strong><br><br>
+        This terminal interface exposes raw relational and graph database records for the<br>
+        <strong style="color:var(--green)">Campus Placement Portal (BACSE202)</strong> — Academic Project.<br><br>
+        All queries are logged. All transactions are audited via<br>
+        <span style="color:var(--cyan)">trg_application_status → application_audit_logs</span>.<br><br>
+        <span style="color:#3a7a3a">Initializing connection to PostgreSQL + Neo4j dual-engine...</span>
+      </div>
+      <div style="display:flex;gap:0">
+        <button class="warn-btn" onclick="closeWarning()">[ AUTHENTICATE &amp; PROCEED ]</button>
+        <button class="warn-btn ghost" onclick="closeWarning()">[ ABORT ]</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CYBER NAV ════ -->
+<nav class="cyber-nav">
+  <div style="display:flex;align-items:center;gap:16px">
+    <span style="font-family:'VT323',monospace;font-size:22px;color:var(--green);text-shadow:var(--glow)">CPP_DB</span>
+    <span style="font-size:9px;color:#3a7a3a;letter-spacing:0.08em">v2.1.0 :: DUAL-ENGINE</span>
+  </div>
+  <div class="cyber-nav-links">
+    <a href="#students-section"  class="cyber-nav-link active">students</a>
+    <a href="#drives-section"    class="cyber-nav-link">drives</a>
+    <a href="#analytics-section" class="cyber-nav-link">analytics</a>
+    <a href="#graph-section"     class="cyber-nav-link">graph_db</a>
+    <a href="#audit-section"     class="cyber-nav-link">audit_log</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="live-dot"></span>
+    <span style="font-size:10px;color:var(--green);letter-spacing:0.06em">LIVE</span>
+    <a href="../frontend/index.html" class="back-btn jitter">← PORTAL UI</a>
+  </div>
+</nav>
+
+<!-- ════ MAIN CONTENT ════ -->
+<div class="terminal-layout">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-left">
+      <div class="status-dot"></div>
+      <span style="color:var(--green)">root@placement-db:~$</span>
+      <span style="color:#3a7a3a">PostgreSQL 18 + Neo4j 5.x :: Dual-Engine Active</span>
+      <span style="color:#3a7a3a">|</span>
+      <span style="color:#ffcc00">⚡ RLS Enabled</span>
+      <span style="color:#3a7a3a">|</span>
+      <span class="live-dot"></span>
+      <span style="color:var(--green)">Real-Time Sync Active</span>
+    </div>
+    <div class="status-right" id="status-clock">SYS_TIME: --:--:--</div>
+  </div>
+
+  <!-- ══ HERO TERMINAL ══ -->
+  <div class="term-window">
+    <div class="term-titlebar">
+      <div class="term-dots">
+        <div class="term-dot r"></div>
+        <div class="term-dot y"></div>
+        <div class="term-dot g"></div>
+      </div>
+      <span class="term-prompt">root@placement-server:~$ ./boot_db_terminal.sh</span>
+      <span class="term-pid">PID:4892 | MEM:128MB</span>
+    </div>
+    <div class="term-body">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center">
+        <div>
+          <pre class="ascii-art" id="ascii-logo">
+  ██████╗██████╗ ██████╗     ██████╗ ██████╗
+ ██╔════╝██╔══██╗██╔══██╗    ██╔══██╗██╔══██╗
+ ██║     ██████╔╝██████╔╝    ██║  ██║██████╔╝
+ ██║     ██╔═══╝ ██╔═══╝     ██║  ██║██╔══██╗
+ ╚██████╗██║     ██║         ██████╔╝██████╔╝
+  ╚═════╝╚═╝     ╚═╝         ╚═════╝ ╚═════╝
+          </pre>
+          <div style="margin-top:12px">
+            <div class="glitch-headline jitter" data-text="DATABASE TERMINAL" id="hero-headline">DATABASE TERMINAL</div>
+          </div>
+          <div style="margin-top:12px">
+            <div class="cmd-line">
+              <span class="cmd-ps1">root@placement-server:~$</span>
+              <span class="cmd-text">DESCRIBE campus_placement_db;</span>
+            </div>
+            <div class="cmd-out">Engine: PostgreSQL 18 + Neo4j 5 (Dual-Mode)</div>
+            <div class="cmd-out">Tables: 15 normalized relations (BCNF)</div>
+            <div class="cmd-out">Graph Nodes: 11 labels, 12 edge types</div>
+            <div class="cmd-out">Status: <span style="color:var(--green)">● ONLINE</span><span class="cursor"></span></div>
+          </div>
+        </div>
+        <div style="text-align:center">
+          <canvas id="globe-canvas" width="220" height="220"></canvas>
+          <div style="font-size:9px;color:#3a7a3a;margin-top:8px;letter-spacing:0.08em">// NEO4J GRAPH MODEL //</div>
+        </div>
+      </div>
+
+      <!-- LOADING BARS -->
+      <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="load-label">PostgreSQL Connection.............. ESTABLISHED</div>
+          <div class="load-bar-outer"><div class="load-bar-inner" id="bar1" style="width:100%"></div></div>
+          <div class="load-label">Neo4j Bolt Connection.............. ESTABLISHED</div>
+          <div class="load-bar-outer"><div class="load-bar-inner" id="bar2" style="width:100%"></div></div>
+        </div>
+        <div>
+          <div class="load-label">RLS Policies...................... ACTIVE (3)</div>
+          <div class="load-bar-outer"><div class="load-bar-inner" id="bar3" style="width:100%"></div></div>
+          <div class="load-label">Audit Triggers.................... ARMED (2)</div>
+          <div class="load-bar-outer"><div class="load-bar-inner" id="bar4" style="width:100%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STATS ROW ══ -->
+  <div class="term-window" id="stats-terminal">
+    <div class="term-titlebar">
+      <div class="term-dots"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div></div>
+      <span class="term-prompt">root@placement-server:~$ SELECT COUNT(*) FROM mv_placement_stats GROUP BY CUBE(dept,company);</span>
+      <span class="term-pid">ROWS:634</span>
+    </div>
+    <div class="term-body" style="padding:0">
+      <div class="stat-grid" id="stats-grid">
+        <!-- JS populated -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STUDENTS TABLE ══ -->
+  <div class="term-window" id="students-section">
+    <div class="term-titlebar">
+      <div class="term-dots"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div></div>
+      <span class="term-prompt">root@placement-server:~$ SELECT * FROM students LEFT JOIN applications USING(roll_no);</span>
+      <span class="term-pid" id="student-count">ROWS: 0</span>
+    </div>
+    <div class="term-body">
+      <div style="display:flex;gap:12px;margin-bottom:12px">
+        <input class="db-search" style="max-width:400px" placeholder="// SEARCH students WHERE name LIKE '%query%' OR roll_no='...'" id="student-search" oninput="filterStudents(this.value)"/>
+        <div class="tab-bar" style="margin-bottom:0;border:none;gap:4px">
+          <button class="tab-btn active" onclick="filterStudentStatus(this,'all')">ALL</button>
+          <button class="tab-btn" onclick="filterStudentStatus(this,'hired')">HIRED</button>
+          <button class="tab-btn" onclick="filterStudentStatus(this,'shortlisted')">SHORTLISTED</button>
+          <button class="tab-btn" onclick="filterStudentStatus(this,'pending')">PENDING</button>
+          <button class="tab-btn" onclick="filterStudentStatus(this,'rejected')">REJECTED</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="db-table" id="students-db-table">
+          <thead><tr>
+            <th>IDX</th><th>ROLL_NO</th><th>NAME</th><th>DEPT</th><th>CGPA</th><th>SKILLS[]</th><th>STATUS</th><th>OFFER</th><th>COMPANY</th>
+          </tr></thead>
+          <tbody id="students-db-tbody"><!-- JS --></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DRIVES TABLE ══ -->
+  <div class="term-window" id="drives-section">
+    <div class="term-titlebar">
+      <div class="term-dots"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div></div>
+      <span class="term-prompt">root@placement-server:~$ SELECT j.*,c.co_name,COUNT(a.app_id) FROM job_postings j JOIN companies c USING(co_id) LEFT JOIN applications a USING(job_id) GROUP BY j.job_id,c.co_name;</span>
+      <span class="term-pid" id="drives-count">ROWS: 0</span>
+    </div>
+    <div class="term-body">
+      <div style="overflow-x:auto">
+        <table class="db-table" id="drives-db-table">
+          <thead><tr>
+            <th>JOB_ID</th><th>COMPANY</th><th>ROLE</th><th>PACKAGE_LPA</th><th>TYPE</th><th>MIN_CGPA</th><th>DEPTS[]</th><th>DEADLINE</th><th>APPLICANTS</th><th>SEATS</th><th>STATUS</th>
+          </tr></thead>
+          <tbody id="drives-db-tbody"><!-- JS --></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ANALYTICS ══ -->
+  <div class="two-col" id="analytics-section">
+    <!-- Dept breakdown terminal -->
+    <div class="term-window">
+      <div class="term-titlebar">
+        <div class="term-dots"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div></div>
+        <span class="term-prompt">GROUP BY ROLLUP(dept_name)</span>
+        <span class="term-pid">CUBE_REPORT</span>
+      </div>
+      <div class="term-body" style="padding:0">
+        <table class="db-table">
+          <thead><tr><th>DEPT</th><th>PLACED</th><th>ELIGIBLE</th><th>RATE%</th><th>AVG_CTC</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-green">CSE</span></td><td>187</td><td>199</td><td style="color:var(--green);text-shadow:0 0 6px var(--green)">94.0%</td><td>₹22.1L</td></tr>
+            <tr><td><span class="badge badge-cyan">IT</span></td><td>106</td><td>120</td><td>88.3%</td><td>₹18.4L</td></tr>
+            <tr><td><span class="badge badge-yellow">ECE</span></td><td>131</td><td>160</td><td>81.9%</td><td>₹14.2L</td></tr>
+            <tr><td><span class="badge badge-cyan">EEE</span></td><td>56</td><td>76</td><td>73.7%</td><td>₹11.4L</td></tr>
+            <tr><td><span class="badge badge-yellow">ME</span></td><td>85</td><td>120</td><td>70.8%</td><td>₹10.8L</td></tr>
+            <tr><td><span class="badge badge-red">CE</span></td><td>69</td><td>102</td><td>67.6%</td><td>₹9.2L</td></tr>
+            <tr style="border-top:1px solid var(--green)">
+              <td style="color:var(--green);font-weight:700">TOTAL</td>
+              <td style="color:var(--green)">634</td>
+              <td>712</td>
+              <td style="color:var(--green);text-shadow:0 0 6px var(--green)">89.0%</td>
+              <td style="color:var(--green)">₹18.4L</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CTC distribution terminal -->
+    <div class="term-window">
+      <div class="term-titlebar">
+        <div class="term-dots"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div></div>
+        <span class="term-prompt">SELECT ctc_band, COUNT(*) FROM offers GROUP BY ctc_band ORDER BY 1;</span>
+        <span class="term-pid">HISTOGRAM</span>
+      </div>
+      <div class="term-body" id="ctc-hist"><!-- JS --></div>
+    </div>
+  </div>
+
+  <!-- ══ GRAPH DB SECTION ══ -->
+  <div class="term-window" id="graph-section">
+    <div class="term-titlebar">
+      <div class="term-dots"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div></div>
+      <span class="term-prompt">root@neo4j:~$ MATCH (s:Student)-[:HAS_SKILL]->(sk:Skill)&lt;-[:REQUIRES_SKILL]-(j:Job) RETURN s,sk,j LIMIT 20;</span>
+      <span class="term-pid">NEO4J::GRAPH</span>
+    </div>
+    <div class="term-body">
+      <div class="tab-bar" id="graph-tab-bar">
+        <button class="tab-btn active" onclick="switchGraphTab(this,'q1')">Q1: SKILL_MATCH</button>
+        <button class="tab-btn" onclick="switchGraphTab(this,'q2')">Q2: SKILL_GAP</button>
+        <button class="tab-btn" onclick="switchGraphTab(this,'q3')">Q3: RECRUITER_RANK</button>
+        <button class="tab-btn" onclick="switchGraphTab(this,'q4')">Q4: JACCARD_IDX</button>
+        <button class="tab-btn" onclick="switchGraphTab(this,'q6')">Q6: DEMAND_SUPPLY</button>
+        <button class="tab-btn" onclick="switchGraphTab(this,'q7')">Q7: ARCHETYPE</button>
+        <button class="tab-btn" onclick="switchGraphTab(this,'q8')">Q8: BOTTLENECK</button>
+      </div>
+      <div id="graph-tab-content"><!-- JS --></div>
+    </div>
+  </div>
+
+  <!-- ══ AUDIT LOG ══ -->
+  <div class="term-window" id="audit-section">
+    <div class="term-titlebar">
+      <div class="term-dots"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div></div>
+      <span class="term-prompt">root@placement-server:~$ SELECT * FROM application_audit_logs ORDER BY log_timestamp DESC LIMIT 20;</span>
+      <span class="term-pid">AUDIT_LOG</span>
+    </div>
+    <div class="term-body">
+      <table class="db-table" id="audit-table">
+        <thead><tr><th>LOG_ID</th><th>TIMESTAMP</th><th>APP_ID</th><th>STUDENT</th><th>ACTION</th><th>STATUS_OLD</th><th>STATUS_NEW</th><th>DB_USER</th></tr></thead>
+        <tbody id="audit-tbody"><!-- JS --></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="text-align:center;padding:24px;color:#1a4a1a;font-size:10px;letter-spacing:0.1em;border-top:1px solid var(--border)">
+    CPP_DB :: CAMPUS PLACEMENT PORTAL :: BACSE202 :: SHASHWAT SIDDHANT &amp; ARNAV SEMWAL :: 2026<br>
+    <span style="color:#0a2a0a">// PostgreSQL 18 + Neo4j 5 Dual-Engine Backend :: All queries logged ::</span>
+  </div>
+
+</div><!-- /terminal-layout -->
+
+<!-- Load shared data from the main portal -->
+<script src="../frontend/data.js"></script>
+<script>
+/* ════════════════════════════════════════════
+   BINARY RAIN (Matrix-style)
+════════════════════════════════════════════ */
+(function() {
+  const c = document.getElementById('rain-canvas');
+  const ctx = c.getContext('2d');
+  function resize() { c.width = window.innerWidth; c.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  const cols = Math.floor(window.innerWidth / 16);
+  const drops = Array.from({length: cols}, () => Math.random() * -100);
+  const chars = '01アイウエオカキクケコSKILLSQUERYNODE01ABCDEF0123456789[]{}()'.split('');
+  function draw() {
+    ctx.fillStyle = 'rgba(5,5,5,0.05)';
+    ctx.fillRect(0,0,c.width,c.height);
+    ctx.fillStyle = '#39FF14';
+    ctx.font = '14px JetBrains Mono, monospace';
+    drops.forEach((y, i) => {
+      const ch = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillStyle = Math.random() > 0.95 ? '#ffffff' : '#39FF14';
+      ctx.globalAlpha = Math.random() * 0.6 + 0.1;
+      ctx.fillText(ch, i * 16, y * 16);
+      if (y * 16 > c.height && Math.random() > 0.975) drops[i] = 0;
+      else drops[i]++;
+    });
+    ctx.globalAlpha = 1;
+  }
+  setInterval(draw, 55);
+})();
+
+/* ════ ROTATING WIREFRAME GLOBE ════ */
+(function() {
+  const c = document.getElementById('globe-canvas');
+  const ctx = c.getContext('2d');
+  let angle = 0;
+  const R = 90, cx = 110, cy = 110;
+  function drawGlobe() {
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.strokeStyle = '#39FF14';
+    ctx.lineWidth = 0.8;
+    ctx.globalAlpha = 0.85;
+    // Latitude lines
+    for (let lat = -80; lat <= 80; lat += 20) {
+      const r = Math.abs(Math.cos(lat * Math.PI/180)) * R;
+      const yOff = Math.sin(lat * Math.PI/180) * R;
+      ctx.beginPath();
+      for (let lng = 0; lng <= 360; lng += 3) {
+        const x = cx + r * Math.cos((lng + angle) * Math.PI/180);
+        const y = cy + yOff + r * Math.sin((lng + angle) * Math.PI/180) * 0.3;
+        lng === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+    // Longitude lines
+    for (let lng = 0; lng < 360; lng += 30) {
+      ctx.beginPath();
+      for (let lat = -90; lat <= 90; lat += 5) {
+        const r2 = Math.abs(Math.cos(lat * Math.PI/180)) * R;
+        const yOff2 = Math.sin(lat * Math.PI/180) * R;
+        const x = cx + r2 * Math.cos((lng + angle) * Math.PI/180);
+        const y = cy + yOff2 + r2 * Math.sin((lng + angle) * Math.PI/180) * 0.3;
+        lat === -90 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+    // Equator glow
+    ctx.strokeStyle = '#00F0FF'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    for (let lng = 0; lng <= 360; lng += 2) {
+      const x = cx + R * Math.cos((lng + angle) * Math.PI/180);
+      const y = cy + R * Math.sin((lng + angle) * Math.PI/180) * 0.3;
+      lng === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    angle += 0.4;
+    requestAnimationFrame(drawGlobe);
+  }
+  drawGlobe();
+})();
+
+/* ════ CLOCK ════ */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('status-clock').textContent = 
+    `SYS_TIME: ${now.toLocaleTimeString()} | EPOCH: ${Math.floor(now.getTime()/1000)}`;
+}
+setInterval(updateClock, 1000); updateClock();
+
+/* ════ WARNING MODAL ════ */
+function closeWarning() {
+  document.getElementById('warn-overlay').style.display = 'none';
+}
+
+/* ════ HELPERS ════ */
+function statusBadge(s) {
+  const map = {
+    hired:       'badge-green',
+    shortlisted: 'badge-cyan',
+    pending:     'badge-yellow',
+    rejected:    'badge-red'
+  };
+  return `<span class="badge ${map[s]||'badge-yellow'}">${s.toUpperCase()}</span>`;
+}
+
+/* ════ STATS GRID ════ */
+function renderStats() {
+  const s = DB.stats;
+  const stats = [
+    { val: s.highestCtc,    label: 'HIGHEST_CTC' },
+    { val: s.avgCtc,        label: 'AVG_CTC' },
+    { val: s.placed,        label: 'PLACED' },
+    { val: s.offers,        label: 'OFFERS' },
+    { val: s.companies,     label: 'COMPANIES' },
+    { val: s.openJobs,      label: 'OPEN_JOBS' },
+  ];
+  document.getElementById('stats-grid').innerHTML = stats.map(x => `
+    <div class="stat-box">
+      <span class="stat-val">${x.val}</span>
+      <span class="stat-label">${x.label}</span>
+    </div>`).join('');
+}
+
+/* ════ STUDENTS TABLE ════ */
+let studentFilter = 'all';
+let studentSearch = '';
+
+function renderStudents() {
+  let list = DB.students;
+  if (studentFilter !== 'all') list = list.filter(s => s.status === studentFilter);
+  if (studentSearch) {
+    const q = studentSearch.toLowerCase();
+    list = list.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.roll.toLowerCase().includes(q) ||
+      s.dept.toLowerCase().includes(q) ||
+      s.skills.some(sk => sk.toLowerCase().includes(q))
+    );
+  }
+  document.getElementById('student-count').textContent = `ROWS: ${list.length}`;
+  document.getElementById('students-db-tbody').innerHTML = list.map((s, i) => `
+    <tr>
+      <td style="color:#1a4a1a">${String(i+1).padStart(3,'0')}</td>
+      <td style="color:var(--cyan);font-family:'JetBrains Mono'">${s.roll}</td>
+      <td style="font-weight:700;color:var(--green)">${s.name}</td>
+      <td><span class="badge badge-cyan">${s.dept}</span></td>
+      <td style="color:${s.cgpa>=9.0?'var(--green)':'#7fff7f'};font-weight:700">${s.cgpa}</td>
+      <td>${s.skills.map(sk=>`<span class="badge badge-green" style="margin:1px">${sk}</span>`).join(' ')}</td>
+      <td>${statusBadge(s.status)}</td>
+      <td style="color:${s.offer?'var(--green)':'#1a4a1a'}">${s.offer||'NULL'}</td>
+      <td style="color:var(--cyan)">${s.company||'NULL'}</td>
+    </tr>`).join('');
+}
+
+function filterStudents(q) { studentSearch = q; renderStudents(); }
+function filterStudentStatus(btn, f) {
+  studentFilter = f;
+  document.querySelectorAll('#students-section .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStudents();
+}
+
+/* ════ DRIVES TABLE ════ */
+function renderDrives() {
+  document.getElementById('drives-count').textContent = `ROWS: ${DB.drives.length}`;
+  document.getElementById('drives-db-tbody').innerHTML = DB.drives.map((d, i) => `
+    <tr>
+      <td style="color:#1a4a1a;font-family:'JetBrains Mono'">JOB${String(d.id).padStart(3,'0')}</td>
+      <td style="color:var(--cyan);font-weight:700">${d.company}</td>
+      <td style="color:var(--green)">${d.role}</td>
+      <td style="color:var(--green);text-shadow:0 0 6px var(--green);font-weight:700">${d.ctc}</td>
+      <td><span class="badge ${d.type==='Internship'?'badge-pink':'badge-cyan'}">${d.type.toUpperCase()}</span></td>
+      <td>${d.minCgpa}</td>
+      <td>${d.depts.map(dep=>`<span class="badge badge-green" style="margin:1px">${dep}</span>`).join(' ')}</td>
+      <td style="color:#ffcc00">${d.deadline}</td>
+      <td>${d.applicants}</td>
+      <td>${d.capacity}</td>
+      <td><span class="badge badge-green">OPEN</span></td>
+    </tr>`).join('');
+}
+
+/* ════ CTC HISTOGRAM ════ */
+function renderCTCHistogram() {
+  const bands = [
+    { label:'< ₹8L',   cse:12, other:68  },
+    { label:'₹8–12L',  cse:18, other:95  },
+    { label:'₹12–16L', cse:28, other:62  },
+    { label:'₹16–20L', cse:35, other:48  },
+    { label:'₹20–28L', cse:42, other:31  },
+    { label:'₹28–35L', cse:28, other:8   },
+    { label:'≥ ₹35L',  cse:15, other:2   },
+  ];
+  const maxV = Math.max(...bands.map(b => b.cse + b.other));
+  const barW = 100;
+  document.getElementById('ctc-hist').innerHTML = `
+    <div style="font-size:9px;color:#3a7a3a;margin-bottom:12px;letter-spacing:0.08em">// ASCII BAR CHART :: CTC_DISTRIBUTION</div>
+    ${bands.map(b => {
+      const tot = b.cse + b.other;
+      const pct = Math.round(tot/maxV*barW);
+      const cseLen = Math.round(b.cse/maxV*barW);
+      const bar = '█'.repeat(Math.max(0,cseLen)) + '░'.repeat(Math.max(0,pct-cseLen));
+      return `<div style="margin-bottom:6px;font-size:11px">
+        <div style="display:flex;gap:12px;align-items:center">
+          <span style="min-width:60px;color:#3a7a3a;font-size:10px">${b.label}</span>
+          <span style="color:var(--green);letter-spacing:0;font-family:'JetBrains Mono'">${bar}</span>
+          <span style="color:#7fff7f;font-size:10px">${tot}</span>
+        </div>
+      </div>`;
+    }).join('')}
+    <div style="margin-top:12px;font-size:10px;color:#3a7a3a">
+      <span style="color:var(--green)">█ CSE</span>&nbsp;&nbsp;
+      <span style="color:#3a7a3a">░ OTHER DEPTS</span>
+    </div>`;
+}
+
+/* ════ GRAPH DB QUERIES ════ */
+const GRAPH_QUERIES = {
+  q1: {
+    title:'Q1 :: Skill Match Percentage',
+    cypher:`MATCH (s:Student {roll_no:"25BCE5227"})-[:HAS_SKILL]->(sk:Skill)<-[:REQUIRES_SKILL]-(j:Job)-[:POSTED_BY]->(c:Company)
+WHERE s.cgpa >= j.min_cgpa
+RETURN j.title AS Role, c.co_name AS Company, count(sk) AS Matched, round(100.0*count(sk)/3,1) AS MatchPct
+ORDER BY MatchPct DESC;`,
+    headers:['ROLE','COMPANY','MATCHED_SKILLS','MATCH_PCT'],
+    rows:[
+      ['Software Development Eng-I','Google India','3','100.0%'],
+      ['Database Kernel Engineer','Oracle India','2','66.7%'],
+      ['Cloud Systems Architect','Amazon Web Services','1','33.3%'],
+      ['Enterprise Software Eng','Microsoft','1','33.3%']
+    ]
+  },
+  q2: {
+    title:'Q2 :: Skill Gap (Set Difference)',
+    cypher:`MATCH (s:Student {roll_no:"25BCE1001"}), (j:Job {job_id:"JOB001"})
+MATCH (j)-[:REQUIRES_SKILL]->(needed:Skill)
+WHERE NOT (s)-[:HAS_SKILL]->(needed)
+RETURN s.name AS Student, j.title AS DreamJob, needed.skill_name AS MissingSkill, needed.category AS Domain;`,
+    headers:['STUDENT','DREAM_JOB','MISSING_SKILL','DOMAIN'],
+    rows:[
+      ['Aditya Sharma','Google SDE-I','Distributed Systems','Cloud & Infra'],
+      ['Aditya Sharma','Google SDE-I','Data Structures & Algorithms','Programming']
+    ]
+  },
+  q3: {
+    title:'Q3 :: Reverse Recruiter Candidate Ranking',
+    cypher:`MATCH (j:Job {job_id:"JOB003"})-[:REQUIRES_SKILL]->(req:Skill)
+WITH j, count(req) AS total_req
+MATCH (s:Student)-[:ENROLLED_IN]->(d:Department) WHERE s.cgpa >= j.min_cgpa
+OPTIONAL MATCH (s)-[:HAS_SKILL]->(sk:Skill)<-[:REQUIRES_SKILL]-(j)
+RETURN s.roll_no, s.name, d.dept_name, s.cgpa, count(sk) AS Matched,
+       round(100.0*count(sk)/total_req,1) AS FitScore
+ORDER BY FitScore DESC;`,
+    headers:['ROLL_NO','CANDIDATE','DEPT','CGPA','MATCHED','FIT_SCORE'],
+    rows:[
+      ['25BCE5227','Shashwat Siddhant','CSE','9.45','3','100.0%'],
+      ['25BCE5392','Arnav Semwal','CSE','9.10','3','100.0%'],
+      ['25BCE1001','Priya Gupta','IT','9.12','2','66.7%'],
+      ['25BCE2002','Rohan Mehra','ECE','8.70','1','33.3%']
+    ]
+  },
+  q4: {
+    title:'Q4 :: Jaccard Peer Similarity',
+    cypher:`MATCH (s1:Student {roll_no:"25BCE5227"})-[:HAS_SKILL]->(sk:Skill)<-[:HAS_SKILL]-(s2:Student)
+WHERE s1 <> s2
+WITH s1, s2, count(sk) AS intersection, collect(sk.skill_name) AS common
+MATCH (s1)-[:HAS_SKILL]->(a), (s2)-[:HAS_SKILL]->(b)
+WITH s2, intersection, common, count(DISTINCT a)+count(DISTINCT b)-intersection AS union_cnt
+RETURN s2.name AS Peer, intersection AS SharedSkills, union_cnt AS UnionSkills,
+       round(1.0*intersection/union_cnt,3) AS JaccardIndex
+ORDER BY JaccardIndex DESC;`,
+    headers:['PEER_NAME','SHARED_SKILLS','UNION_SKILLS','JACCARD_IDX'],
+    rows:[
+      ['Arnav Semwal','4','5','0.800'],
+      ['Priya Gupta','3','6','0.500'],
+      ['Rohan Mehra','2','6','0.333']
+    ]
+  },
+  q6: {
+    title:'Q6 :: Skill Demand vs Supply (Degree Centrality)',
+    cypher:`MATCH (sk:Skill)
+OPTIONAL MATCH (j:Job)-[:REQUIRES_SKILL]->(sk)
+WITH sk, count(j) AS demand
+OPTIONAL MATCH (s:Student)-[:HAS_SKILL]->(sk)
+RETURN sk.skill_name, sk.category, count(j) AS demand, count(s) AS supply,
+       count(j)-count(s) AS gap
+ORDER BY demand DESC;`,
+    headers:['SKILL_NAME','DOMAIN','DEMAND','SUPPLY','TALENT_GAP'],
+    rows:[
+      ['DSA','Programming','7','7','0'],
+      ['Python','Programming','6','8','-2 (surplus)'],
+      ['Distributed Systems','Cloud & Infra','5','3','+2 ⚠'],
+      ['System Design','Architecture','4','2','+2 ⚠'],
+      ['SQL','Database','5','9','-4 (surplus)']
+    ]
+  },
+  q7: {
+    title:'Q7 :: High-Package Archetype Mining (≥₹30 LPA)',
+    cypher:`MATCH (s:Student)-[:SUBMITTED]->(app)-[:RESULTED_IN]->(o:Offer)
+MATCH (s)-[:HAS_SKILL]->(sk:Skill)
+WHERE o.package_offered >= 30.0 AND o.offer_status = 'Accepted'
+RETURN sk.skill_name AS HighYieldSkill, count(DISTINCT s) AS HiredCount,
+       collect(DISTINCT s.name) AS StarStudents
+ORDER BY HiredCount DESC;`,
+    headers:['HIGH_YIELD_SKILL','HIRED_COUNT','STAR_STUDENTS'],
+    rows:[
+      ['Python','3','Shashwat, Arnav, Priya'],
+      ['DSA','3','Shashwat, Arnav, Priya'],
+      ['Distributed Systems','2','Shashwat, Arnav'],
+      ['SQL','2','Shashwat, Priya']
+    ]
+  },
+  q8: {
+    title:'Q8 :: Bottleneck & Lag Detection',
+    cypher:`MATCH (app:Application) WHERE app.status IN ['Interviewing','Pending']
+MATCH (s:Student)-[:SUBMITTED]->(app)-[:FOR_JOB]->(j:Job)-[:POSTED_BY]->(c:Company)
+OPTIONAL MATCH (app)-[:ADVANCED_TO]->(i:Interview)
+RETURN app.app_id, s.name, j.title, c.co_name, app.status,
+       CASE WHEN i IS NULL THEN "ACTION REQUIRED" ELSE "OK" END AS Diagnostic
+ORDER BY app.status DESC;`,
+    headers:['APP_ID','STUDENT','JOB','COMPANY','STATUS','DIAGNOSTIC'],
+    rows:[
+      ['APP008','Kavya Reddy','Frontend Engineer','Adobe','Pending','⚠ ACTION REQUIRED'],
+      ['APP011','Simran Kapoor','Technology Analyst','Deloitte','Pending','⚠ ACTION REQUIRED'],
+      ['APP004','Rohan Mehra','Embedded Engineer','Qualcomm','Interviewing','● OK']
+    ]
+  }
+};
+
+let currentGraphQ = 'q1';
+function switchGraphTab(btn, q) {
+  currentGraphQ = q;
+  document.querySelectorAll('#graph-tab-bar .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGraphQuery(q);
+}
+
+function renderGraphQuery(q) {
+  const data = GRAPH_QUERIES[q];
+  const thead = `<tr>${data.headers.map(h=>`<th>${h}</th>`).join('')}</tr>`;
+  const tbody = data.rows.map(r => `<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('');
+  document.getElementById('graph-tab-content').innerHTML = `
+    <div class="code-console" style="background:#020902;border:1px solid var(--border);padding:12px 16px;margin-bottom:12px;font-size:11px;color:var(--cyan);font-family:'JetBrains Mono',monospace;line-height:1.5;overflow-x:auto;white-space:pre">${data.cypher}</div>
+    <div style="font-size:9px;color:#3a7a3a;margin-bottom:8px;letter-spacing:0.08em">// OUTPUT :: ${data.title}</div>
+    <div style="overflow-x:auto"><table class="db-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`;
+}
+
+/* ════ AUDIT LOG ════ */
+function renderAuditLog() {
+  const logs = [
+    {id:'001',ts:'2026-10-27 17:05:48',app:'APP102',student:'Aditya Sharma',action:'INSERT',old:'NULL',new:'Pending',user:'postgres'},
+    {id:'002',ts:'2026-10-26 14:22:11',app:'APP001',student:'Aditya Sharma',action:'UPDATE',old:'Pending',new:'Shortlisted',user:'recruiter_google'},
+    {id:'003',ts:'2026-10-26 16:45:00',app:'APP001',student:'Aditya Sharma',action:'UPDATE',old:'Shortlisted',new:'Hired',user:'recruiter_google'},
+    {id:'004',ts:'2026-10-25 09:10:32',app:'APP002',student:'Arnav Semwal',action:'UPDATE',old:'Pending',new:'Hired',user:'recruiter_aws'},
+    {id:'005',ts:'2026-10-25 11:00:00',app:'APP003',student:'Priya Gupta',action:'UPDATE',old:'Interviewing',new:'Hired',user:'recruiter_msft'},
+    {id:'006',ts:'2026-10-24 08:55:12',app:'APP008',student:'Kavya Reddy',action:'INSERT',old:'NULL',new:'Pending',user:'postgres'},
+    {id:'007',ts:'2026-10-23 15:30:45',app:'APP011',student:'Simran Kapoor',action:'INSERT',old:'NULL',new:'Pending',user:'postgres'},
+    {id:'008',ts:'2026-10-23 17:20:01',app:'APP004',student:'Rohan Mehra',action:'UPDATE',old:'Pending',new:'Interviewing',user:'recruiter_qualcomm'},
+  ];
+  document.getElementById('audit-tbody').innerHTML = logs.map(l => `
+    <tr>
+      <td style="color:#1a4a1a">${l.id}</td>
+      <td style="color:#3a7a3a;font-size:10px">${l.ts}</td>
+      <td style="color:var(--cyan)">${l.app}</td>
+      <td style="color:var(--green)">${l.student}</td>
+      <td><span class="badge ${l.action==='INSERT'?'badge-cyan':'badge-yellow'}">${l.action}</span></td>
+      <td style="color:#1a4a1a">${l.old}</td>
+      <td style="color:var(--green)">${l.new}</td>
+      <td style="color:#3a7a3a;font-size:10px">${l.user}</td>
+    </tr>`).join('');
+}
+
+/* ════ INIT ════ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderStats();
+  renderStudents();
+  renderDrives();
+  renderCTCHistogram();
+  renderGraphQuery('q1');
+  renderAuditLog();
+
+  // Animate loading bars on load
+  ['bar1','bar2','bar3','bar4'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.style.width = '0%';
+    setTimeout(() => { el.style.width = '100%'; }, 200 + i * 150);
+  });
+});
+</script>
+</body>
+</html>
